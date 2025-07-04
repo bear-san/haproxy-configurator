@@ -3,6 +3,7 @@ module github.com/bear-san/haproxy-network-manager
 go 1.24.3
 
 require (
+	github.com/bear-san/haproxy-go v0.1.4
 	google.golang.org/grpc v1.73.0
 	google.golang.org/protobuf v1.36.6
 )
