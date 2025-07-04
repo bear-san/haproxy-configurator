@@ -1,12 +1,11 @@
-version: v1
+version: v2
 modules:
   - path: proto
-name: buf.build/bear-san/haproxy-network-manager
 lint:
   use:
-    - DEFAULT
+    - STANDARD
   except:
     - PACKAGE_DIRECTORY_MATCH
 breaking:
   use:
-    - FILE
+    - WIRE_JSON

@@ -1,10 +1,12 @@
-version: v1
+version: v2
+inputs:
+  - directory: proto
 plugins:
-  - plugin: buf.build/protocolbuffers/go
+  - remote: buf.build/protocolbuffers/go
     out: .
     opt:
       - module=github.com/bear-san/haproxy-network-manager
-  - plugin: buf.build/grpc/go
+  - remote: buf.build/grpc/go
     out: .
     opt:
       - module=github.com/bear-san/haproxy-network-manager
