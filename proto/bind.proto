@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package haproxy.v1;
+
+option go_package = "github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1";
+
+// Bind represents a HAProxy bind configuration
+message Bind {
+  string id = 1;
+  string name = 2;
+  string address = 3;
+  int32 port = 4;
+  bool v4v6 = 5;
+  bool v6only = 6;
+}
+
+// CRUD request/response messages for Bind
+
+message CreateBindRequest {
+  string transaction_id = 1;
+  string frontend_name = 2;
+  Bind bind = 3;
+}
+
+message CreateBindResponse {
+  Bind bind = 1;
+}
+
+message GetBindRequest {
+  string transaction_id = 1;
+  string frontend_name = 2;
+  string name = 3;
+}
+
+message GetBindResponse {
+  Bind bind = 1;
+}
+
+message ListBindsRequest {
+  string transaction_id = 1;
+  string frontend_name = 2;
+}
+
+message ListBindsResponse {
+  repeated Bind binds = 1;
+}
+
+message UpdateBindRequest {
+  string transaction_id = 1;
+  string frontend_name = 2;
+  Bind bind = 3;
+}
+
+message UpdateBindResponse {
+  Bind bind = 1;
+}
+
+message DeleteBindRequest {
+  string transaction_id = 1;
+  string frontend_name = 2;
+  string name = 3;
+}
+
+message DeleteBindResponse {}

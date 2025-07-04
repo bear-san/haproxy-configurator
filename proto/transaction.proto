@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package haproxy.v1;
+
+option go_package = "github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1";
+
+// Transaction represents a HAProxy configuration transaction
+message Transaction {
+  string id = 1;
+  string status = 2;
+}
+
+// GetVersionRequest is used to get the current HAProxy configuration version
+message GetVersionRequest {}
+
+// GetVersionResponse contains the current HAProxy configuration version
+message GetVersionResponse {
+  int32 version = 1;
+}
+
+// CreateTransactionRequest creates a new transaction
+message CreateTransactionRequest {
+  int32 version = 1;
+}
+
+// CreateTransactionResponse contains the created transaction information
+message CreateTransactionResponse {
+  Transaction transaction = 1;
+}
+
+// GetTransactionRequest gets information about a specific transaction
+message GetTransactionRequest {
+  string transaction_id = 1;
+}
+
+// GetTransactionResponse contains transaction information
+message GetTransactionResponse {
+  Transaction transaction = 1;
+}
+
+// CommitTransactionRequest commits a transaction
+message CommitTransactionRequest {
+  string transaction_id = 1;
+}
+
+// CommitTransactionResponse contains the result of the commit operation
+message CommitTransactionResponse {
+  Transaction transaction = 1;
+}
+
+// CloseTransactionRequest closes/deletes a transaction
+message CloseTransactionRequest {
+  string transaction_id = 1;
+}
+
+// CloseTransactionResponse contains the result of the close operation
+message CloseTransactionResponse {
+  string message = 1;
+}
+
+// TransactionService provides transaction management for HAProxy configuration
