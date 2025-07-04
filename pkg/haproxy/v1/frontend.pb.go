@@ -30,7 +30,7 @@ type Frontend struct {
 	Enabled        bool                   `protobuf:"varint,4,opt,name=enabled,proto3" json:"enabled,omitempty"`
 	Id             int32                  `protobuf:"varint,5,opt,name=id,proto3" json:"id,omitempty"`
 	Name           string                 `protobuf:"bytes,6,opt,name=name,proto3" json:"name,omitempty"`
-	Mode           string                 `protobuf:"bytes,7,opt,name=mode,proto3" json:"mode,omitempty"` // tcp, http
+	Mode           ProxyMode              `protobuf:"varint,7,opt,name=mode,proto3,enum=haproxy.v1.ProxyMode" json:"mode,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -107,11 +107,11 @@ func (x *Frontend) GetName() string {
 	return ""
 }
 
-func (x *Frontend) GetMode() string {
+func (x *Frontend) GetMode() ProxyMode {
 	if x != nil {
 		return x.Mode
 	}
-	return ""
+	return ProxyMode_PROXY_MODE_UNSPECIFIED
 }
 
 type CreateFrontendRequest struct {
@@ -591,15 +591,15 @@ var File_frontend_proto protoreflect.FileDescriptor
 const file_frontend_proto_rawDesc = "" +
 	"\n" +
 	"\x0efrontend.proto\x12\n" +
-	"haproxy.v1\"\xc3\x01\n" +
+	"haproxy.v1\x1a\fcommon.proto\"\xda\x01\n" +
 	"\bFrontend\x12'\n" +
 	"\x0fdefault_backend\x18\x01 \x01(\tR\x0edefaultBackend\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x1a\n" +
 	"\bdisabled\x18\x03 \x01(\bR\bdisabled\x12\x18\n" +
 	"\aenabled\x18\x04 \x01(\bR\aenabled\x12\x0e\n" +
 	"\x02id\x18\x05 \x01(\x05R\x02id\x12\x12\n" +
-	"\x04name\x18\x06 \x01(\tR\x04name\x12\x12\n" +
-	"\x04mode\x18\a \x01(\tR\x04mode\"p\n" +
+	"\x04name\x18\x06 \x01(\tR\x04name\x12)\n" +
+	"\x04mode\x18\a \x01(\x0e2\x15.haproxy.v1.ProxyModeR\x04mode\"p\n" +
 	"\x15CreateFrontendRequest\x12%\n" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x120\n" +
 	"\bfrontend\x18\x02 \x01(\v2\x14.haproxy.v1.FrontendR\bfrontend\"J\n" +
@@ -650,19 +650,21 @@ var file_frontend_proto_goTypes = []any{
 	(*UpdateFrontendResponse)(nil), // 8: haproxy.v1.UpdateFrontendResponse
 	(*DeleteFrontendRequest)(nil),  // 9: haproxy.v1.DeleteFrontendRequest
 	(*DeleteFrontendResponse)(nil), // 10: haproxy.v1.DeleteFrontendResponse
+	(ProxyMode)(0),                 // 11: haproxy.v1.ProxyMode
 }
 var file_frontend_proto_depIdxs = []int32{
-	0, // 0: haproxy.v1.CreateFrontendRequest.frontend:type_name -> haproxy.v1.Frontend
-	0, // 1: haproxy.v1.CreateFrontendResponse.frontend:type_name -> haproxy.v1.Frontend
-	0, // 2: haproxy.v1.GetFrontendResponse.frontend:type_name -> haproxy.v1.Frontend
-	0, // 3: haproxy.v1.ListFrontendsResponse.frontends:type_name -> haproxy.v1.Frontend
-	0, // 4: haproxy.v1.UpdateFrontendRequest.frontend:type_name -> haproxy.v1.Frontend
-	0, // 5: haproxy.v1.UpdateFrontendResponse.frontend:type_name -> haproxy.v1.Frontend
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	11, // 0: haproxy.v1.Frontend.mode:type_name -> haproxy.v1.ProxyMode
+	0,  // 1: haproxy.v1.CreateFrontendRequest.frontend:type_name -> haproxy.v1.Frontend
+	0,  // 2: haproxy.v1.CreateFrontendResponse.frontend:type_name -> haproxy.v1.Frontend
+	0,  // 3: haproxy.v1.GetFrontendResponse.frontend:type_name -> haproxy.v1.Frontend
+	0,  // 4: haproxy.v1.ListFrontendsResponse.frontends:type_name -> haproxy.v1.Frontend
+	0,  // 5: haproxy.v1.UpdateFrontendRequest.frontend:type_name -> haproxy.v1.Frontend
+	0,  // 6: haproxy.v1.UpdateFrontendResponse.frontend:type_name -> haproxy.v1.Frontend
+	7,  // [7:7] is the sub-list for method output_type
+	7,  // [7:7] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_frontend_proto_init() }
@@ -670,6 +672,7 @@ func file_frontend_proto_init() {
 	if File_frontend_proto != nil {
 		return
 	}
+	file_common_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

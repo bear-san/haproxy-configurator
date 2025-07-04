@@ -21,10 +21,66 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// BalanceAlgorithm defines available load balancing algorithms
+type BalanceAlgorithm int32
+
+const (
+	BalanceAlgorithm_BALANCE_ALGORITHM_UNSPECIFIED BalanceAlgorithm = 0
+	BalanceAlgorithm_BALANCE_ALGORITHM_FIRST       BalanceAlgorithm = 1
+	BalanceAlgorithm_BALANCE_ALGORITHM_HASH        BalanceAlgorithm = 2
+	BalanceAlgorithm_BALANCE_ALGORITHM_RANDOM      BalanceAlgorithm = 3
+	BalanceAlgorithm_BALANCE_ALGORITHM_ROUNDROBIN  BalanceAlgorithm = 4
+)
+
+// Enum value maps for BalanceAlgorithm.
+var (
+	BalanceAlgorithm_name = map[int32]string{
+		0: "BALANCE_ALGORITHM_UNSPECIFIED",
+		1: "BALANCE_ALGORITHM_FIRST",
+		2: "BALANCE_ALGORITHM_HASH",
+		3: "BALANCE_ALGORITHM_RANDOM",
+		4: "BALANCE_ALGORITHM_ROUNDROBIN",
+	}
+	BalanceAlgorithm_value = map[string]int32{
+		"BALANCE_ALGORITHM_UNSPECIFIED": 0,
+		"BALANCE_ALGORITHM_FIRST":       1,
+		"BALANCE_ALGORITHM_HASH":        2,
+		"BALANCE_ALGORITHM_RANDOM":      3,
+		"BALANCE_ALGORITHM_ROUNDROBIN":  4,
+	}
+)
+
+func (x BalanceAlgorithm) Enum() *BalanceAlgorithm {
+	p := new(BalanceAlgorithm)
+	*p = x
+	return p
+}
+
+func (x BalanceAlgorithm) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (BalanceAlgorithm) Descriptor() protoreflect.EnumDescriptor {
+	return file_backend_proto_enumTypes[0].Descriptor()
+}
+
+func (BalanceAlgorithm) Type() protoreflect.EnumType {
+	return &file_backend_proto_enumTypes[0]
+}
+
+func (x BalanceAlgorithm) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use BalanceAlgorithm.Descriptor instead.
+func (BalanceAlgorithm) EnumDescriptor() ([]byte, []int) {
+	return file_backend_proto_rawDescGZIP(), []int{0}
+}
+
 // BackendBalance represents load balancing configuration for backend
 type BackendBalance struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Algorithm     string                 `protobuf:"bytes,1,opt,name=algorithm,proto3" json:"algorithm,omitempty"` // first, hash, random, roundrobin
+	Algorithm     BalanceAlgorithm       `protobuf:"varint,1,opt,name=algorithm,proto3,enum=haproxy.v1.BalanceAlgorithm" json:"algorithm,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -59,11 +115,11 @@ func (*BackendBalance) Descriptor() ([]byte, []int) {
 	return file_backend_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *BackendBalance) GetAlgorithm() string {
+func (x *BackendBalance) GetAlgorithm() BalanceAlgorithm {
 	if x != nil {
 		return x.Algorithm
 	}
-	return ""
+	return BalanceAlgorithm_BALANCE_ALGORITHM_UNSPECIFIED
 }
 
 // Backend represents a HAProxy backend configuration
@@ -72,7 +128,7 @@ type Backend struct {
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Balance       *BackendBalance        `protobuf:"bytes,2,opt,name=balance,proto3" json:"balance,omitempty"`
 	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Mode          string                 `protobuf:"bytes,4,opt,name=mode,proto3" json:"mode,omitempty"` // tcp, http
+	Mode          ProxyMode              `protobuf:"varint,4,opt,name=mode,proto3,enum=haproxy.v1.ProxyMode" json:"mode,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -128,11 +184,11 @@ func (x *Backend) GetName() string {
 	return ""
 }
 
-func (x *Backend) GetMode() string {
+func (x *Backend) GetMode() ProxyMode {
 	if x != nil {
 		return x.Mode
 	}
-	return ""
+	return ProxyMode_PROXY_MODE_UNSPECIFIED
 }
 
 type CreateBackendRequest struct {
@@ -612,14 +668,14 @@ var File_backend_proto protoreflect.FileDescriptor
 const file_backend_proto_rawDesc = "" +
 	"\n" +
 	"\rbackend.proto\x12\n" +
-	"haproxy.v1\".\n" +
-	"\x0eBackendBalance\x12\x1c\n" +
-	"\talgorithm\x18\x01 \x01(\tR\talgorithm\"w\n" +
+	"haproxy.v1\x1a\fcommon.proto\"L\n" +
+	"\x0eBackendBalance\x12:\n" +
+	"\talgorithm\x18\x01 \x01(\x0e2\x1c.haproxy.v1.BalanceAlgorithmR\talgorithm\"\x8e\x01\n" +
 	"\aBackend\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x124\n" +
 	"\abalance\x18\x02 \x01(\v2\x1a.haproxy.v1.BackendBalanceR\abalance\x12\x12\n" +
-	"\x04name\x18\x03 \x01(\tR\x04name\x12\x12\n" +
-	"\x04mode\x18\x04 \x01(\tR\x04mode\"l\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12)\n" +
+	"\x04mode\x18\x04 \x01(\x0e2\x15.haproxy.v1.ProxyModeR\x04mode\"l\n" +
 	"\x14CreateBackendRequest\x12%\n" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x12-\n" +
 	"\abackend\x18\x02 \x01(\v2\x13.haproxy.v1.BackendR\abackend\"F\n" +
@@ -643,7 +699,13 @@ const file_backend_proto_rawDesc = "" +
 	"\x14DeleteBackendRequest\x12%\n" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\"\x17\n" +
-	"\x15DeleteBackendResponseB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
+	"\x15DeleteBackendResponse*\xae\x01\n" +
+	"\x10BalanceAlgorithm\x12!\n" +
+	"\x1dBALANCE_ALGORITHM_UNSPECIFIED\x10\x00\x12\x1b\n" +
+	"\x17BALANCE_ALGORITHM_FIRST\x10\x01\x12\x1a\n" +
+	"\x16BALANCE_ALGORITHM_HASH\x10\x02\x12\x1c\n" +
+	"\x18BALANCE_ALGORITHM_RANDOM\x10\x03\x12 \n" +
+	"\x1cBALANCE_ALGORITHM_ROUNDROBIN\x10\x04B<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
 
 var (
 	file_backend_proto_rawDescOnce sync.Once
@@ -657,34 +719,39 @@ func file_backend_proto_rawDescGZIP() []byte {
 	return file_backend_proto_rawDescData
 }
 
+var file_backend_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_backend_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_backend_proto_goTypes = []any{
-	(*BackendBalance)(nil),        // 0: haproxy.v1.BackendBalance
-	(*Backend)(nil),               // 1: haproxy.v1.Backend
-	(*CreateBackendRequest)(nil),  // 2: haproxy.v1.CreateBackendRequest
-	(*CreateBackendResponse)(nil), // 3: haproxy.v1.CreateBackendResponse
-	(*GetBackendRequest)(nil),     // 4: haproxy.v1.GetBackendRequest
-	(*GetBackendResponse)(nil),    // 5: haproxy.v1.GetBackendResponse
-	(*ListBackendsRequest)(nil),   // 6: haproxy.v1.ListBackendsRequest
-	(*ListBackendsResponse)(nil),  // 7: haproxy.v1.ListBackendsResponse
-	(*UpdateBackendRequest)(nil),  // 8: haproxy.v1.UpdateBackendRequest
-	(*UpdateBackendResponse)(nil), // 9: haproxy.v1.UpdateBackendResponse
-	(*DeleteBackendRequest)(nil),  // 10: haproxy.v1.DeleteBackendRequest
-	(*DeleteBackendResponse)(nil), // 11: haproxy.v1.DeleteBackendResponse
+	(BalanceAlgorithm)(0),         // 0: haproxy.v1.BalanceAlgorithm
+	(*BackendBalance)(nil),        // 1: haproxy.v1.BackendBalance
+	(*Backend)(nil),               // 2: haproxy.v1.Backend
+	(*CreateBackendRequest)(nil),  // 3: haproxy.v1.CreateBackendRequest
+	(*CreateBackendResponse)(nil), // 4: haproxy.v1.CreateBackendResponse
+	(*GetBackendRequest)(nil),     // 5: haproxy.v1.GetBackendRequest
+	(*GetBackendResponse)(nil),    // 6: haproxy.v1.GetBackendResponse
+	(*ListBackendsRequest)(nil),   // 7: haproxy.v1.ListBackendsRequest
+	(*ListBackendsResponse)(nil),  // 8: haproxy.v1.ListBackendsResponse
+	(*UpdateBackendRequest)(nil),  // 9: haproxy.v1.UpdateBackendRequest
+	(*UpdateBackendResponse)(nil), // 10: haproxy.v1.UpdateBackendResponse
+	(*DeleteBackendRequest)(nil),  // 11: haproxy.v1.DeleteBackendRequest
+	(*DeleteBackendResponse)(nil), // 12: haproxy.v1.DeleteBackendResponse
+	(ProxyMode)(0),                // 13: haproxy.v1.ProxyMode
 }
 var file_backend_proto_depIdxs = []int32{
-	0, // 0: haproxy.v1.Backend.balance:type_name -> haproxy.v1.BackendBalance
-	1, // 1: haproxy.v1.CreateBackendRequest.backend:type_name -> haproxy.v1.Backend
-	1, // 2: haproxy.v1.CreateBackendResponse.backend:type_name -> haproxy.v1.Backend
-	1, // 3: haproxy.v1.GetBackendResponse.backend:type_name -> haproxy.v1.Backend
-	1, // 4: haproxy.v1.ListBackendsResponse.backends:type_name -> haproxy.v1.Backend
-	1, // 5: haproxy.v1.UpdateBackendRequest.backend:type_name -> haproxy.v1.Backend
-	1, // 6: haproxy.v1.UpdateBackendResponse.backend:type_name -> haproxy.v1.Backend
-	7, // [7:7] is the sub-list for method output_type
-	7, // [7:7] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	0,  // 0: haproxy.v1.BackendBalance.algorithm:type_name -> haproxy.v1.BalanceAlgorithm
+	1,  // 1: haproxy.v1.Backend.balance:type_name -> haproxy.v1.BackendBalance
+	13, // 2: haproxy.v1.Backend.mode:type_name -> haproxy.v1.ProxyMode
+	2,  // 3: haproxy.v1.CreateBackendRequest.backend:type_name -> haproxy.v1.Backend
+	2,  // 4: haproxy.v1.CreateBackendResponse.backend:type_name -> haproxy.v1.Backend
+	2,  // 5: haproxy.v1.GetBackendResponse.backend:type_name -> haproxy.v1.Backend
+	2,  // 6: haproxy.v1.ListBackendsResponse.backends:type_name -> haproxy.v1.Backend
+	2,  // 7: haproxy.v1.UpdateBackendRequest.backend:type_name -> haproxy.v1.Backend
+	2,  // 8: haproxy.v1.UpdateBackendResponse.backend:type_name -> haproxy.v1.Backend
+	9,  // [9:9] is the sub-list for method output_type
+	9,  // [9:9] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_backend_proto_init() }
@@ -692,18 +759,20 @@ func file_backend_proto_init() {
 	if File_backend_proto != nil {
 		return
 	}
+	file_common_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_backend_proto_rawDesc), len(file_backend_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_backend_proto_goTypes,
 		DependencyIndexes: file_backend_proto_depIdxs,
+		EnumInfos:         file_backend_proto_enumTypes,
 		MessageInfos:      file_backend_proto_msgTypes,
 	}.Build()
 	File_backend_proto = out.File

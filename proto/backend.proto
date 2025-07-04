@@ -2,11 +2,22 @@ syntax = "proto3";
 
 package haproxy.v1;
 
+import "common.proto";
+
 option go_package = "github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1";
+
+// BalanceAlgorithm defines available load balancing algorithms
+enum BalanceAlgorithm {
+  BALANCE_ALGORITHM_UNSPECIFIED = 0;
+  BALANCE_ALGORITHM_FIRST = 1;
+  BALANCE_ALGORITHM_HASH = 2;
+  BALANCE_ALGORITHM_RANDOM = 3;
+  BALANCE_ALGORITHM_ROUNDROBIN = 4;
+}
 
 // BackendBalance represents load balancing configuration for backend
 message BackendBalance {
-  string algorithm = 1; // first, hash, random, roundrobin
+  BalanceAlgorithm algorithm = 1;
 }
 
 // Backend represents a HAProxy backend configuration
@@ -14,7 +25,7 @@ message Backend {
   int32 id = 1;
   BackendBalance balance = 2;
   string name = 3;
-  string mode = 4; // tcp, http
+  ProxyMode mode = 4;
 }
 
 // CRUD request/response messages for Backend

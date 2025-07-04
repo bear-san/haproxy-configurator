@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package haproxy.v1;
 
+import "common.proto";
+
 option go_package = "github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1";
 
 // Frontend represents a HAProxy frontend configuration
@@ -12,7 +14,7 @@ message Frontend {
   bool enabled = 4;
   int32 id = 5;
   string name = 6;
-  string mode = 7; // tcp, http
+  ProxyMode mode = 7;
 }
 
 // CRUD request/response messages for Frontend

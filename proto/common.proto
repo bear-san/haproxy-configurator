@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package haproxy.v1;
+
+option go_package = "github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1";
+
+// ProxyMode defines the proxy mode (TCP or HTTP)
+enum ProxyMode {
+  PROXY_MODE_UNSPECIFIED = 0;
+  PROXY_MODE_TCP = 1;
+  PROXY_MODE_HTTP = 2;
+}
