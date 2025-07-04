@@ -62,12 +62,3 @@ message DeleteBindRequest {
 }
 
 message DeleteBindResponse {}
-
-// BindService provides CRUD operations for HAProxy bind configuration
-service BindService {
-  rpc CreateBind(CreateBindRequest) returns (CreateBindResponse);
-  rpc GetBind(GetBindRequest) returns (GetBindResponse);
-  rpc ListBinds(ListBindsRequest) returns (ListBindsResponse);
-  rpc UpdateBind(UpdateBindRequest) returns (UpdateBindResponse);
-  rpc DeleteBind(DeleteBindRequest) returns (DeleteBindResponse);
-}

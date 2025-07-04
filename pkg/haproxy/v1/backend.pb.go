@@ -647,14 +647,7 @@ const file_backend_proto_rawDesc = "" +
 	"\x14DeleteBackendRequest\x12%\n" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\"\x17\n" +
-	"\x15DeleteBackendResponse2\xb2\x03\n" +
-	"\x0eBackendService\x12T\n" +
-	"\rCreateBackend\x12 .haproxy.v1.CreateBackendRequest\x1a!.haproxy.v1.CreateBackendResponse\x12K\n" +
-	"\n" +
-	"GetBackend\x12\x1d.haproxy.v1.GetBackendRequest\x1a\x1e.haproxy.v1.GetBackendResponse\x12Q\n" +
-	"\fListBackends\x12\x1f.haproxy.v1.ListBackendsRequest\x1a .haproxy.v1.ListBackendsResponse\x12T\n" +
-	"\rUpdateBackend\x12 .haproxy.v1.UpdateBackendRequest\x1a!.haproxy.v1.UpdateBackendResponse\x12T\n" +
-	"\rDeleteBackend\x12 .haproxy.v1.DeleteBackendRequest\x1a!.haproxy.v1.DeleteBackendResponseB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
+	"\x15DeleteBackendResponseB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
 
 var (
 	file_backend_proto_rawDescOnce sync.Once
@@ -684,28 +677,18 @@ var file_backend_proto_goTypes = []any{
 	(*DeleteBackendResponse)(nil), // 11: haproxy.v1.DeleteBackendResponse
 }
 var file_backend_proto_depIdxs = []int32{
-	0,  // 0: haproxy.v1.Backend.balance:type_name -> haproxy.v1.BackendBalance
-	1,  // 1: haproxy.v1.CreateBackendRequest.backend:type_name -> haproxy.v1.Backend
-	1,  // 2: haproxy.v1.CreateBackendResponse.backend:type_name -> haproxy.v1.Backend
-	1,  // 3: haproxy.v1.GetBackendResponse.backend:type_name -> haproxy.v1.Backend
-	1,  // 4: haproxy.v1.ListBackendsResponse.backends:type_name -> haproxy.v1.Backend
-	1,  // 5: haproxy.v1.UpdateBackendRequest.backend:type_name -> haproxy.v1.Backend
-	1,  // 6: haproxy.v1.UpdateBackendResponse.backend:type_name -> haproxy.v1.Backend
-	2,  // 7: haproxy.v1.BackendService.CreateBackend:input_type -> haproxy.v1.CreateBackendRequest
-	4,  // 8: haproxy.v1.BackendService.GetBackend:input_type -> haproxy.v1.GetBackendRequest
-	6,  // 9: haproxy.v1.BackendService.ListBackends:input_type -> haproxy.v1.ListBackendsRequest
-	8,  // 10: haproxy.v1.BackendService.UpdateBackend:input_type -> haproxy.v1.UpdateBackendRequest
-	10, // 11: haproxy.v1.BackendService.DeleteBackend:input_type -> haproxy.v1.DeleteBackendRequest
-	3,  // 12: haproxy.v1.BackendService.CreateBackend:output_type -> haproxy.v1.CreateBackendResponse
-	5,  // 13: haproxy.v1.BackendService.GetBackend:output_type -> haproxy.v1.GetBackendResponse
-	7,  // 14: haproxy.v1.BackendService.ListBackends:output_type -> haproxy.v1.ListBackendsResponse
-	9,  // 15: haproxy.v1.BackendService.UpdateBackend:output_type -> haproxy.v1.UpdateBackendResponse
-	11, // 16: haproxy.v1.BackendService.DeleteBackend:output_type -> haproxy.v1.DeleteBackendResponse
-	12, // [12:17] is the sub-list for method output_type
-	7,  // [7:12] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	0, // 0: haproxy.v1.Backend.balance:type_name -> haproxy.v1.BackendBalance
+	1, // 1: haproxy.v1.CreateBackendRequest.backend:type_name -> haproxy.v1.Backend
+	1, // 2: haproxy.v1.CreateBackendResponse.backend:type_name -> haproxy.v1.Backend
+	1, // 3: haproxy.v1.GetBackendResponse.backend:type_name -> haproxy.v1.Backend
+	1, // 4: haproxy.v1.ListBackendsResponse.backends:type_name -> haproxy.v1.Backend
+	1, // 5: haproxy.v1.UpdateBackendRequest.backend:type_name -> haproxy.v1.Backend
+	1, // 6: haproxy.v1.UpdateBackendResponse.backend:type_name -> haproxy.v1.Backend
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_backend_proto_init() }
@@ -722,7 +705,7 @@ func file_backend_proto_init() {
 			NumEnums:      0,
 			NumMessages:   12,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   0,
 		},
 		GoTypes:           file_backend_proto_goTypes,
 		DependencyIndexes: file_backend_proto_depIdxs,

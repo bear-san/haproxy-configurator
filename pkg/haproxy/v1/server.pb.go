@@ -646,13 +646,7 @@ const file_server_proto_rawDesc = "" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x12!\n" +
 	"\fbackend_name\x18\x02 \x01(\tR\vbackendName\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\"\x16\n" +
-	"\x14DeleteServerResponse2\xa2\x03\n" +
-	"\rServerService\x12Q\n" +
-	"\fCreateServer\x12\x1f.haproxy.v1.CreateServerRequest\x1a .haproxy.v1.CreateServerResponse\x12H\n" +
-	"\tGetServer\x12\x1c.haproxy.v1.GetServerRequest\x1a\x1d.haproxy.v1.GetServerResponse\x12N\n" +
-	"\vListServers\x12\x1e.haproxy.v1.ListServersRequest\x1a\x1f.haproxy.v1.ListServersResponse\x12Q\n" +
-	"\fUpdateServer\x12\x1f.haproxy.v1.UpdateServerRequest\x1a .haproxy.v1.UpdateServerResponse\x12Q\n" +
-	"\fDeleteServer\x12\x1f.haproxy.v1.DeleteServerRequest\x1a .haproxy.v1.DeleteServerResponseB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
+	"\x14DeleteServerResponseB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
 
 var (
 	file_server_proto_rawDescOnce sync.Once
@@ -681,27 +675,17 @@ var file_server_proto_goTypes = []any{
 	(*DeleteServerResponse)(nil), // 10: haproxy.v1.DeleteServerResponse
 }
 var file_server_proto_depIdxs = []int32{
-	0,  // 0: haproxy.v1.CreateServerRequest.server:type_name -> haproxy.v1.Server
-	0,  // 1: haproxy.v1.CreateServerResponse.server:type_name -> haproxy.v1.Server
-	0,  // 2: haproxy.v1.GetServerResponse.server:type_name -> haproxy.v1.Server
-	0,  // 3: haproxy.v1.ListServersResponse.servers:type_name -> haproxy.v1.Server
-	0,  // 4: haproxy.v1.UpdateServerRequest.server:type_name -> haproxy.v1.Server
-	0,  // 5: haproxy.v1.UpdateServerResponse.server:type_name -> haproxy.v1.Server
-	1,  // 6: haproxy.v1.ServerService.CreateServer:input_type -> haproxy.v1.CreateServerRequest
-	3,  // 7: haproxy.v1.ServerService.GetServer:input_type -> haproxy.v1.GetServerRequest
-	5,  // 8: haproxy.v1.ServerService.ListServers:input_type -> haproxy.v1.ListServersRequest
-	7,  // 9: haproxy.v1.ServerService.UpdateServer:input_type -> haproxy.v1.UpdateServerRequest
-	9,  // 10: haproxy.v1.ServerService.DeleteServer:input_type -> haproxy.v1.DeleteServerRequest
-	2,  // 11: haproxy.v1.ServerService.CreateServer:output_type -> haproxy.v1.CreateServerResponse
-	4,  // 12: haproxy.v1.ServerService.GetServer:output_type -> haproxy.v1.GetServerResponse
-	6,  // 13: haproxy.v1.ServerService.ListServers:output_type -> haproxy.v1.ListServersResponse
-	8,  // 14: haproxy.v1.ServerService.UpdateServer:output_type -> haproxy.v1.UpdateServerResponse
-	10, // 15: haproxy.v1.ServerService.DeleteServer:output_type -> haproxy.v1.DeleteServerResponse
-	11, // [11:16] is the sub-list for method output_type
-	6,  // [6:11] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	0, // 0: haproxy.v1.CreateServerRequest.server:type_name -> haproxy.v1.Server
+	0, // 1: haproxy.v1.CreateServerResponse.server:type_name -> haproxy.v1.Server
+	0, // 2: haproxy.v1.GetServerResponse.server:type_name -> haproxy.v1.Server
+	0, // 3: haproxy.v1.ListServersResponse.servers:type_name -> haproxy.v1.Server
+	0, // 4: haproxy.v1.UpdateServerRequest.server:type_name -> haproxy.v1.Server
+	0, // 5: haproxy.v1.UpdateServerResponse.server:type_name -> haproxy.v1.Server
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_server_proto_init() }
@@ -718,7 +702,7 @@ func file_server_proto_init() {
 			NumEnums:      0,
 			NumMessages:   11,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   0,
 		},
 		GoTypes:           file_server_proto_goTypes,
 		DependencyIndexes: file_server_proto_depIdxs,

@@ -631,13 +631,7 @@ const file_frontend_proto_rawDesc = "" +
 	"\x15DeleteFrontendRequest\x12%\n" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\"\x18\n" +
-	"\x16DeleteFrontendResponse2\xc2\x03\n" +
-	"\x0fFrontendService\x12W\n" +
-	"\x0eCreateFrontend\x12!.haproxy.v1.CreateFrontendRequest\x1a\".haproxy.v1.CreateFrontendResponse\x12N\n" +
-	"\vGetFrontend\x12\x1e.haproxy.v1.GetFrontendRequest\x1a\x1f.haproxy.v1.GetFrontendResponse\x12T\n" +
-	"\rListFrontends\x12 .haproxy.v1.ListFrontendsRequest\x1a!.haproxy.v1.ListFrontendsResponse\x12W\n" +
-	"\x0eUpdateFrontend\x12!.haproxy.v1.UpdateFrontendRequest\x1a\".haproxy.v1.UpdateFrontendResponse\x12W\n" +
-	"\x0eDeleteFrontend\x12!.haproxy.v1.DeleteFrontendRequest\x1a\".haproxy.v1.DeleteFrontendResponseB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
+	"\x16DeleteFrontendResponseB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
 
 var (
 	file_frontend_proto_rawDescOnce sync.Once
@@ -666,27 +660,17 @@ var file_frontend_proto_goTypes = []any{
 	(*DeleteFrontendResponse)(nil), // 10: haproxy.v1.DeleteFrontendResponse
 }
 var file_frontend_proto_depIdxs = []int32{
-	0,  // 0: haproxy.v1.CreateFrontendRequest.frontend:type_name -> haproxy.v1.Frontend
-	0,  // 1: haproxy.v1.CreateFrontendResponse.frontend:type_name -> haproxy.v1.Frontend
-	0,  // 2: haproxy.v1.GetFrontendResponse.frontend:type_name -> haproxy.v1.Frontend
-	0,  // 3: haproxy.v1.ListFrontendsResponse.frontends:type_name -> haproxy.v1.Frontend
-	0,  // 4: haproxy.v1.UpdateFrontendRequest.frontend:type_name -> haproxy.v1.Frontend
-	0,  // 5: haproxy.v1.UpdateFrontendResponse.frontend:type_name -> haproxy.v1.Frontend
-	1,  // 6: haproxy.v1.FrontendService.CreateFrontend:input_type -> haproxy.v1.CreateFrontendRequest
-	3,  // 7: haproxy.v1.FrontendService.GetFrontend:input_type -> haproxy.v1.GetFrontendRequest
-	5,  // 8: haproxy.v1.FrontendService.ListFrontends:input_type -> haproxy.v1.ListFrontendsRequest
-	7,  // 9: haproxy.v1.FrontendService.UpdateFrontend:input_type -> haproxy.v1.UpdateFrontendRequest
-	9,  // 10: haproxy.v1.FrontendService.DeleteFrontend:input_type -> haproxy.v1.DeleteFrontendRequest
-	2,  // 11: haproxy.v1.FrontendService.CreateFrontend:output_type -> haproxy.v1.CreateFrontendResponse
-	4,  // 12: haproxy.v1.FrontendService.GetFrontend:output_type -> haproxy.v1.GetFrontendResponse
-	6,  // 13: haproxy.v1.FrontendService.ListFrontends:output_type -> haproxy.v1.ListFrontendsResponse
-	8,  // 14: haproxy.v1.FrontendService.UpdateFrontend:output_type -> haproxy.v1.UpdateFrontendResponse
-	10, // 15: haproxy.v1.FrontendService.DeleteFrontend:output_type -> haproxy.v1.DeleteFrontendResponse
-	11, // [11:16] is the sub-list for method output_type
-	6,  // [6:11] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	0, // 0: haproxy.v1.CreateFrontendRequest.frontend:type_name -> haproxy.v1.Frontend
+	0, // 1: haproxy.v1.CreateFrontendResponse.frontend:type_name -> haproxy.v1.Frontend
+	0, // 2: haproxy.v1.GetFrontendResponse.frontend:type_name -> haproxy.v1.Frontend
+	0, // 3: haproxy.v1.ListFrontendsResponse.frontends:type_name -> haproxy.v1.Frontend
+	0, // 4: haproxy.v1.UpdateFrontendRequest.frontend:type_name -> haproxy.v1.Frontend
+	0, // 5: haproxy.v1.UpdateFrontendResponse.frontend:type_name -> haproxy.v1.Frontend
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_frontend_proto_init() }
@@ -703,7 +687,7 @@ func file_frontend_proto_init() {
 			NumEnums:      0,
 			NumMessages:   11,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   0,
 		},
 		GoTypes:           file_frontend_proto_goTypes,
 		DependencyIndexes: file_frontend_proto_depIdxs,

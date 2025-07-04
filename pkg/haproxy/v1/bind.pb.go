@@ -658,16 +658,7 @@ const file_bind_proto_rawDesc = "" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x12#\n" +
 	"\rfrontend_name\x18\x02 \x01(\tR\ffrontendName\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\"\x14\n" +
-	"\x12DeleteBindResponse2\x82\x03\n" +
-	"\vBindService\x12K\n" +
-	"\n" +
-	"CreateBind\x12\x1d.haproxy.v1.CreateBindRequest\x1a\x1e.haproxy.v1.CreateBindResponse\x12B\n" +
-	"\aGetBind\x12\x1a.haproxy.v1.GetBindRequest\x1a\x1b.haproxy.v1.GetBindResponse\x12H\n" +
-	"\tListBinds\x12\x1c.haproxy.v1.ListBindsRequest\x1a\x1d.haproxy.v1.ListBindsResponse\x12K\n" +
-	"\n" +
-	"UpdateBind\x12\x1d.haproxy.v1.UpdateBindRequest\x1a\x1e.haproxy.v1.UpdateBindResponse\x12K\n" +
-	"\n" +
-	"DeleteBind\x12\x1d.haproxy.v1.DeleteBindRequest\x1a\x1e.haproxy.v1.DeleteBindResponseB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
+	"\x12DeleteBindResponseB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
 
 var (
 	file_bind_proto_rawDescOnce sync.Once
@@ -696,27 +687,17 @@ var file_bind_proto_goTypes = []any{
 	(*DeleteBindResponse)(nil), // 10: haproxy.v1.DeleteBindResponse
 }
 var file_bind_proto_depIdxs = []int32{
-	0,  // 0: haproxy.v1.CreateBindRequest.bind:type_name -> haproxy.v1.Bind
-	0,  // 1: haproxy.v1.CreateBindResponse.bind:type_name -> haproxy.v1.Bind
-	0,  // 2: haproxy.v1.GetBindResponse.bind:type_name -> haproxy.v1.Bind
-	0,  // 3: haproxy.v1.ListBindsResponse.binds:type_name -> haproxy.v1.Bind
-	0,  // 4: haproxy.v1.UpdateBindRequest.bind:type_name -> haproxy.v1.Bind
-	0,  // 5: haproxy.v1.UpdateBindResponse.bind:type_name -> haproxy.v1.Bind
-	1,  // 6: haproxy.v1.BindService.CreateBind:input_type -> haproxy.v1.CreateBindRequest
-	3,  // 7: haproxy.v1.BindService.GetBind:input_type -> haproxy.v1.GetBindRequest
-	5,  // 8: haproxy.v1.BindService.ListBinds:input_type -> haproxy.v1.ListBindsRequest
-	7,  // 9: haproxy.v1.BindService.UpdateBind:input_type -> haproxy.v1.UpdateBindRequest
-	9,  // 10: haproxy.v1.BindService.DeleteBind:input_type -> haproxy.v1.DeleteBindRequest
-	2,  // 11: haproxy.v1.BindService.CreateBind:output_type -> haproxy.v1.CreateBindResponse
-	4,  // 12: haproxy.v1.BindService.GetBind:output_type -> haproxy.v1.GetBindResponse
-	6,  // 13: haproxy.v1.BindService.ListBinds:output_type -> haproxy.v1.ListBindsResponse
-	8,  // 14: haproxy.v1.BindService.UpdateBind:output_type -> haproxy.v1.UpdateBindResponse
-	10, // 15: haproxy.v1.BindService.DeleteBind:output_type -> haproxy.v1.DeleteBindResponse
-	11, // [11:16] is the sub-list for method output_type
-	6,  // [6:11] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	0, // 0: haproxy.v1.CreateBindRequest.bind:type_name -> haproxy.v1.Bind
+	0, // 1: haproxy.v1.CreateBindResponse.bind:type_name -> haproxy.v1.Bind
+	0, // 2: haproxy.v1.GetBindResponse.bind:type_name -> haproxy.v1.Bind
+	0, // 3: haproxy.v1.ListBindsResponse.binds:type_name -> haproxy.v1.Bind
+	0, // 4: haproxy.v1.UpdateBindRequest.bind:type_name -> haproxy.v1.Bind
+	0, // 5: haproxy.v1.UpdateBindResponse.bind:type_name -> haproxy.v1.Bind
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_bind_proto_init() }
@@ -733,7 +714,7 @@ func file_bind_proto_init() {
 			NumEnums:      0,
 			NumMessages:   11,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   0,
 		},
 		GoTypes:           file_bind_proto_goTypes,
 		DependencyIndexes: file_bind_proto_depIdxs,

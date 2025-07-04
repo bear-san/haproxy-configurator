@@ -61,12 +61,3 @@ message DeleteServerRequest {
 }
 
 message DeleteServerResponse {}
-
-// ServerService provides CRUD operations for HAProxy server configuration
-service ServerService {
-  rpc CreateServer(CreateServerRequest) returns (CreateServerResponse);
-  rpc GetServer(GetServerRequest) returns (GetServerResponse);
-  rpc ListServers(ListServersRequest) returns (ListServersResponse);
-  rpc UpdateServer(UpdateServerRequest) returns (UpdateServerResponse);
-  rpc DeleteServer(DeleteServerRequest) returns (DeleteServerResponse);
-}

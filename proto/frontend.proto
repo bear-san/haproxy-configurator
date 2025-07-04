@@ -59,12 +59,3 @@ message DeleteFrontendRequest {
 }
 
 message DeleteFrontendResponse {}
-
-// FrontendService provides CRUD operations for HAProxy frontend configuration
-service FrontendService {
-  rpc CreateFrontend(CreateFrontendRequest) returns (CreateFrontendResponse);
-  rpc GetFrontend(GetFrontendRequest) returns (GetFrontendResponse);
-  rpc ListFrontends(ListFrontendsRequest) returns (ListFrontendsResponse);
-  rpc UpdateFrontend(UpdateFrontendRequest) returns (UpdateFrontendResponse);
-  rpc DeleteFrontend(DeleteFrontendRequest) returns (DeleteFrontendResponse);
-}

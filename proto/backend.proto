@@ -61,12 +61,3 @@ message DeleteBackendRequest {
 }
 
 message DeleteBackendResponse {}
-
-// BackendService provides CRUD operations for HAProxy backend configuration
-service BackendService {
-  rpc CreateBackend(CreateBackendRequest) returns (CreateBackendResponse);
-  rpc GetBackend(GetBackendRequest) returns (GetBackendResponse);
-  rpc ListBackends(ListBackendsRequest) returns (ListBackendsResponse);
-  rpc UpdateBackend(UpdateBackendRequest) returns (UpdateBackendResponse);
-  rpc DeleteBackend(DeleteBackendRequest) returns (DeleteBackendResponse);
-}

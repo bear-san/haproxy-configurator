@@ -59,19 +59,3 @@ message CloseTransactionResponse {
 }
 
 // TransactionService provides transaction management for HAProxy configuration
-service TransactionService {
-  // GetVersion gets the current HAProxy configuration version
-  rpc GetVersion(GetVersionRequest) returns (GetVersionResponse);
-  
-  // CreateTransaction creates a new configuration transaction
-  rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionResponse);
-  
-  // GetTransaction gets information about a specific transaction
-  rpc GetTransaction(GetTransactionRequest) returns (GetTransactionResponse);
-  
-  // CommitTransaction commits a transaction to apply the configuration changes
-  rpc CommitTransaction(CommitTransactionRequest) returns (CommitTransactionResponse);
-  
-  // CloseTransaction closes/deletes a transaction without applying changes
-  rpc CloseTransaction(CloseTransactionRequest) returns (CloseTransactionResponse);
-}

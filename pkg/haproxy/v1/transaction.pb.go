@@ -543,14 +543,7 @@ const file_transaction_proto_rawDesc = "" +
 	"\x17CloseTransactionRequest\x12%\n" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\"4\n" +
 	"\x18CloseTransactionResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage2\xdd\x03\n" +
-	"\x12TransactionService\x12K\n" +
-	"\n" +
-	"GetVersion\x12\x1d.haproxy.v1.GetVersionRequest\x1a\x1e.haproxy.v1.GetVersionResponse\x12`\n" +
-	"\x11CreateTransaction\x12$.haproxy.v1.CreateTransactionRequest\x1a%.haproxy.v1.CreateTransactionResponse\x12W\n" +
-	"\x0eGetTransaction\x12!.haproxy.v1.GetTransactionRequest\x1a\".haproxy.v1.GetTransactionResponse\x12`\n" +
-	"\x11CommitTransaction\x12$.haproxy.v1.CommitTransactionRequest\x1a%.haproxy.v1.CommitTransactionResponse\x12]\n" +
-	"\x10CloseTransaction\x12#.haproxy.v1.CloseTransactionRequest\x1a$.haproxy.v1.CloseTransactionResponseB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
+	"\amessage\x18\x01 \x01(\tR\amessageB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
 
 var (
 	file_transaction_proto_rawDescOnce sync.Once
@@ -579,24 +572,14 @@ var file_transaction_proto_goTypes = []any{
 	(*CloseTransactionResponse)(nil),  // 10: haproxy.v1.CloseTransactionResponse
 }
 var file_transaction_proto_depIdxs = []int32{
-	0,  // 0: haproxy.v1.CreateTransactionResponse.transaction:type_name -> haproxy.v1.Transaction
-	0,  // 1: haproxy.v1.GetTransactionResponse.transaction:type_name -> haproxy.v1.Transaction
-	0,  // 2: haproxy.v1.CommitTransactionResponse.transaction:type_name -> haproxy.v1.Transaction
-	1,  // 3: haproxy.v1.TransactionService.GetVersion:input_type -> haproxy.v1.GetVersionRequest
-	3,  // 4: haproxy.v1.TransactionService.CreateTransaction:input_type -> haproxy.v1.CreateTransactionRequest
-	5,  // 5: haproxy.v1.TransactionService.GetTransaction:input_type -> haproxy.v1.GetTransactionRequest
-	7,  // 6: haproxy.v1.TransactionService.CommitTransaction:input_type -> haproxy.v1.CommitTransactionRequest
-	9,  // 7: haproxy.v1.TransactionService.CloseTransaction:input_type -> haproxy.v1.CloseTransactionRequest
-	2,  // 8: haproxy.v1.TransactionService.GetVersion:output_type -> haproxy.v1.GetVersionResponse
-	4,  // 9: haproxy.v1.TransactionService.CreateTransaction:output_type -> haproxy.v1.CreateTransactionResponse
-	6,  // 10: haproxy.v1.TransactionService.GetTransaction:output_type -> haproxy.v1.GetTransactionResponse
-	8,  // 11: haproxy.v1.TransactionService.CommitTransaction:output_type -> haproxy.v1.CommitTransactionResponse
-	10, // 12: haproxy.v1.TransactionService.CloseTransaction:output_type -> haproxy.v1.CloseTransactionResponse
-	8,  // [8:13] is the sub-list for method output_type
-	3,  // [3:8] is the sub-list for method input_type
-	3,  // [3:3] is the sub-list for extension type_name
-	3,  // [3:3] is the sub-list for extension extendee
-	0,  // [0:3] is the sub-list for field type_name
+	0, // 0: haproxy.v1.CreateTransactionResponse.transaction:type_name -> haproxy.v1.Transaction
+	0, // 1: haproxy.v1.GetTransactionResponse.transaction:type_name -> haproxy.v1.Transaction
+	0, // 2: haproxy.v1.CommitTransactionResponse.transaction:type_name -> haproxy.v1.Transaction
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_transaction_proto_init() }
@@ -612,7 +595,7 @@ func file_transaction_proto_init() {
 			NumEnums:      0,
 			NumMessages:   11,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   0,
 		},
 		GoTypes:           file_transaction_proto_goTypes,
 		DependencyIndexes: file_transaction_proto_depIdxs,
