@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package haproxy.v1;
+
+option go_package = "haproxy-network-manager/proto/haproxy/v1";
+
+import "transaction.proto";
+import "backend.proto";
+import "frontend.proto";
+import "bind.proto";
+import "server.proto";
+
+// HAProxyManagerService provides a unified interface for managing HAProxy configuration
+// This service aggregates all HAProxy configuration operations into a single service
+service HAProxyManagerService {
+  // Transaction operations
+  rpc GetVersion(GetVersionRequest) returns (GetVersionResponse);
+  rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionResponse);
+  rpc GetTransaction(GetTransactionRequest) returns (GetTransactionResponse);
+  rpc CommitTransaction(CommitTransactionRequest) returns (CommitTransactionResponse);
+  rpc CloseTransaction(CloseTransactionRequest) returns (CloseTransactionResponse);
+
+  // Backend operations
+  rpc CreateBackend(CreateBackendRequest) returns (CreateBackendResponse);
+  rpc GetBackend(GetBackendRequest) returns (GetBackendResponse);
+  rpc ListBackends(ListBackendsRequest) returns (ListBackendsResponse);
+  rpc UpdateBackend(UpdateBackendRequest) returns (UpdateBackendResponse);
+  rpc DeleteBackend(DeleteBackendRequest) returns (DeleteBackendResponse);
+
+  // Frontend operations
+  rpc CreateFrontend(CreateFrontendRequest) returns (CreateFrontendResponse);
+  rpc GetFrontend(GetFrontendRequest) returns (GetFrontendResponse);
+  rpc ListFrontends(ListFrontendsRequest) returns (ListFrontendsResponse);
+  rpc UpdateFrontend(UpdateFrontendRequest) returns (UpdateFrontendResponse);
+  rpc DeleteFrontend(DeleteFrontendRequest) returns (DeleteFrontendResponse);
+
+  // Bind operations (binds are associated with frontends)
+  rpc CreateBind(CreateBindRequest) returns (CreateBindResponse);
+  rpc GetBind(GetBindRequest) returns (GetBindResponse);
+  rpc ListBinds(ListBindsRequest) returns (ListBindsResponse);
+  rpc UpdateBind(UpdateBindRequest) returns (UpdateBindResponse);
+  rpc DeleteBind(DeleteBindRequest) returns (DeleteBindResponse);
+
+  // Server operations (servers are associated with backends)
+  rpc CreateServer(CreateServerRequest) returns (CreateServerResponse);
+  rpc GetServer(GetServerRequest) returns (GetServerResponse);
+  rpc ListServers(ListServersRequest) returns (ListServersResponse);
+  rpc UpdateServer(UpdateServerRequest) returns (UpdateServerResponse);
+  rpc DeleteServer(DeleteServerRequest) returns (DeleteServerResponse);
+}

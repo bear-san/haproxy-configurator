@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package haproxy.v1;
+
+option go_package = "haproxy-network-manager/proto/haproxy/v1";
+
+// Server represents a HAProxy server configuration
+message Server {
+  optional string id = 1;
+  optional string name = 2;
+  optional string address = 3;
+  optional int32 port = 4;
+}
+
+// CRUD request/response messages for Server
+
+message CreateServerRequest {
+  string transaction_id = 1;
+  string backend_name = 2;
+  Server server = 3;
+}
+
+message CreateServerResponse {
+  Server server = 1;
+}
+
+message GetServerRequest {
+  string transaction_id = 1;
+  string backend_name = 2;
+  string name = 3;
+}
+
+message GetServerResponse {
+  Server server = 1;
+}
+
+message ListServersRequest {
+  string transaction_id = 1;
+  string backend_name = 2;
+}
+
+message ListServersResponse {
+  repeated Server servers = 1;
+}
+
+message UpdateServerRequest {
+  string transaction_id = 1;
+  string backend_name = 2;
+  string name = 3;
+  Server server = 4;
+}
+
+message UpdateServerResponse {
+  Server server = 1;
+}
+
+message DeleteServerRequest {
+  string transaction_id = 1;
+  string backend_name = 2;
+  string name = 3;
+}
+
+message DeleteServerResponse {}
+
+// ServerService provides CRUD operations for HAProxy server configuration
+service ServerService {
+  rpc CreateServer(CreateServerRequest) returns (CreateServerResponse);
+  rpc GetServer(GetServerRequest) returns (GetServerResponse);
+  rpc ListServers(ListServersRequest) returns (ListServersResponse);
+  rpc UpdateServer(UpdateServerRequest) returns (UpdateServerResponse);
+  rpc DeleteServer(DeleteServerRequest) returns (DeleteServerResponse);
+}

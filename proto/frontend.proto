@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package haproxy.v1;
+
+option go_package = "haproxy-network-manager/proto/haproxy/v1";
+
+// Frontend represents a HAProxy frontend configuration
+message Frontend {
+  optional string default_backend = 1;
+  optional string description = 2;
+  optional bool disabled = 3;
+  optional bool enabled = 4;
+  optional int32 id = 5;
+  optional string name = 6;
+  optional string mode = 7; // tcp, http
+}
+
+// CRUD request/response messages for Frontend
+
+message CreateFrontendRequest {
+  string transaction_id = 1;
+  Frontend frontend = 2;
+}
+
+message CreateFrontendResponse {
+  Frontend frontend = 1;
+}
+
+message GetFrontendRequest {
+  string transaction_id = 1;
+  string name = 2;
+}
+
+message GetFrontendResponse {
+  Frontend frontend = 1;
+}
+
+message ListFrontendsRequest {
+  string transaction_id = 1;
+}
+
+message ListFrontendsResponse {
+  repeated Frontend frontends = 1;
+}
+
+message UpdateFrontendRequest {
+  string transaction_id = 1;
+  string name = 2;
+  Frontend frontend = 3;
+}
+
+message UpdateFrontendResponse {
+  Frontend frontend = 1;
+}
+
+message DeleteFrontendRequest {
+  string transaction_id = 1;
+  string name = 2;
+}
+
+message DeleteFrontendResponse {}
+
+// FrontendService provides CRUD operations for HAProxy frontend configuration
+service FrontendService {
+  rpc CreateFrontend(CreateFrontendRequest) returns (CreateFrontendResponse);
+  rpc GetFrontend(GetFrontendRequest) returns (GetFrontendResponse);
+  rpc ListFrontends(ListFrontendsRequest) returns (ListFrontendsResponse);
+  rpc UpdateFrontend(UpdateFrontendRequest) returns (UpdateFrontendResponse);
+  rpc DeleteFrontend(DeleteFrontendRequest) returns (DeleteFrontendResponse);
+}

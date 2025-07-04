@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package haproxy.v1;
+
+option go_package = "haproxy-network-manager/proto/haproxy/v1";
+
+// Bind represents a HAProxy bind configuration
+message Bind {
+  optional string id = 1;
+  optional string name = 2;
+  optional string address = 3;
+  optional int32 port = 4;
+  optional bool v4v6 = 5;
+  optional bool v6only = 6;
+}
+
+// CRUD request/response messages for Bind
+
+message CreateBindRequest {
+  string transaction_id = 1;
+  string frontend_name = 2;
+  Bind bind = 3;
+}
+
+message CreateBindResponse {
+  Bind bind = 1;
+}
+
+message GetBindRequest {
+  string transaction_id = 1;
+  string frontend_name = 2;
+  string name = 3;
+}
+
+message GetBindResponse {
+  Bind bind = 1;
+}
+
+message ListBindsRequest {
+  string transaction_id = 1;
+  string frontend_name = 2;
+}
+
+message ListBindsResponse {
+  repeated Bind binds = 1;
+}
+
+message UpdateBindRequest {
+  string transaction_id = 1;
+  string frontend_name = 2;
+  Bind bind = 3;
+}
+
+message UpdateBindResponse {
+  Bind bind = 1;
+}
+
+message DeleteBindRequest {
+  string transaction_id = 1;
+  string frontend_name = 2;
+  string name = 3;
+}
+
+message DeleteBindResponse {}
+
+// BindService provides CRUD operations for HAProxy bind configuration
+service BindService {
+  rpc CreateBind(CreateBindRequest) returns (CreateBindResponse);
+  rpc GetBind(GetBindRequest) returns (GetBindResponse);
+  rpc ListBinds(ListBindsRequest) returns (ListBindsResponse);
+  rpc UpdateBind(UpdateBindRequest) returns (UpdateBindResponse);
+  rpc DeleteBind(DeleteBindRequest) returns (DeleteBindResponse);
+}
