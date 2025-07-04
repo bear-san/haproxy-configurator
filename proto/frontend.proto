@@ -6,13 +6,13 @@ option go_package = "github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1"
 
 // Frontend represents a HAProxy frontend configuration
 message Frontend {
-  optional string default_backend = 1;
-  optional string description = 2;
-  optional bool disabled = 3;
-  optional bool enabled = 4;
-  optional int32 id = 5;
-  optional string name = 6;
-  optional string mode = 7; // tcp, http
+  string default_backend = 1;
+  string description = 2;
+  bool disabled = 3;
+  bool enabled = 4;
+  int32 id = 5;
+  string name = 6;
+  string mode = 7; // tcp, http
 }
 
 // CRUD request/response messages for Frontend

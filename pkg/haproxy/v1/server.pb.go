@@ -24,10 +24,10 @@ const (
 // Server represents a HAProxy server configuration
 type Server struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            *string                `protobuf:"bytes,1,opt,name=id,proto3,oneof" json:"id,omitempty"`
-	Name          *string                `protobuf:"bytes,2,opt,name=name,proto3,oneof" json:"name,omitempty"`
-	Address       *string                `protobuf:"bytes,3,opt,name=address,proto3,oneof" json:"address,omitempty"`
-	Port          *int32                 `protobuf:"varint,4,opt,name=port,proto3,oneof" json:"port,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Address       string                 `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
+	Port          int32                  `protobuf:"varint,4,opt,name=port,proto3" json:"port,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -63,29 +63,29 @@ func (*Server) Descriptor() ([]byte, []int) {
 }
 
 func (x *Server) GetId() string {
-	if x != nil && x.Id != nil {
-		return *x.Id
+	if x != nil {
+		return x.Id
 	}
 	return ""
 }
 
 func (x *Server) GetName() string {
-	if x != nil && x.Name != nil {
-		return *x.Name
+	if x != nil {
+		return x.Name
 	}
 	return ""
 }
 
 func (x *Server) GetAddress() string {
-	if x != nil && x.Address != nil {
-		return *x.Address
+	if x != nil {
+		return x.Address
 	}
 	return ""
 }
 
 func (x *Server) GetPort() int32 {
-	if x != nil && x.Port != nil {
-		return *x.Port
+	if x != nil {
+		return x.Port
 	}
 	return 0
 }
@@ -607,17 +607,12 @@ var File_server_proto protoreflect.FileDescriptor
 const file_server_proto_rawDesc = "" +
 	"\n" +
 	"\fserver.proto\x12\n" +
-	"haproxy.v1\"\x93\x01\n" +
-	"\x06Server\x12\x13\n" +
-	"\x02id\x18\x01 \x01(\tH\x00R\x02id\x88\x01\x01\x12\x17\n" +
-	"\x04name\x18\x02 \x01(\tH\x01R\x04name\x88\x01\x01\x12\x1d\n" +
-	"\aaddress\x18\x03 \x01(\tH\x02R\aaddress\x88\x01\x01\x12\x17\n" +
-	"\x04port\x18\x04 \x01(\x05H\x03R\x04port\x88\x01\x01B\x05\n" +
-	"\x03_idB\a\n" +
-	"\x05_nameB\n" +
-	"\n" +
-	"\b_addressB\a\n" +
-	"\x05_port\"\x8b\x01\n" +
+	"haproxy.v1\"Z\n" +
+	"\x06Server\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
+	"\aaddress\x18\x03 \x01(\tR\aaddress\x12\x12\n" +
+	"\x04port\x18\x04 \x01(\x05R\x04port\"\x8b\x01\n" +
 	"\x13CreateServerRequest\x12%\n" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x12!\n" +
 	"\fbackend_name\x18\x02 \x01(\tR\vbackendName\x12*\n" +
@@ -693,7 +688,6 @@ func file_server_proto_init() {
 	if File_server_proto != nil {
 		return
 	}
-	file_server_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

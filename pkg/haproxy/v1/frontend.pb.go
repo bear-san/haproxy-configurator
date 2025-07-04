@@ -24,13 +24,13 @@ const (
 // Frontend represents a HAProxy frontend configuration
 type Frontend struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
-	DefaultBackend *string                `protobuf:"bytes,1,opt,name=default_backend,json=defaultBackend,proto3,oneof" json:"default_backend,omitempty"`
-	Description    *string                `protobuf:"bytes,2,opt,name=description,proto3,oneof" json:"description,omitempty"`
-	Disabled       *bool                  `protobuf:"varint,3,opt,name=disabled,proto3,oneof" json:"disabled,omitempty"`
-	Enabled        *bool                  `protobuf:"varint,4,opt,name=enabled,proto3,oneof" json:"enabled,omitempty"`
-	Id             *int32                 `protobuf:"varint,5,opt,name=id,proto3,oneof" json:"id,omitempty"`
-	Name           *string                `protobuf:"bytes,6,opt,name=name,proto3,oneof" json:"name,omitempty"`
-	Mode           *string                `protobuf:"bytes,7,opt,name=mode,proto3,oneof" json:"mode,omitempty"` // tcp, http
+	DefaultBackend string                 `protobuf:"bytes,1,opt,name=default_backend,json=defaultBackend,proto3" json:"default_backend,omitempty"`
+	Description    string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Disabled       bool                   `protobuf:"varint,3,opt,name=disabled,proto3" json:"disabled,omitempty"`
+	Enabled        bool                   `protobuf:"varint,4,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	Id             int32                  `protobuf:"varint,5,opt,name=id,proto3" json:"id,omitempty"`
+	Name           string                 `protobuf:"bytes,6,opt,name=name,proto3" json:"name,omitempty"`
+	Mode           string                 `protobuf:"bytes,7,opt,name=mode,proto3" json:"mode,omitempty"` // tcp, http
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -66,50 +66,50 @@ func (*Frontend) Descriptor() ([]byte, []int) {
 }
 
 func (x *Frontend) GetDefaultBackend() string {
-	if x != nil && x.DefaultBackend != nil {
-		return *x.DefaultBackend
+	if x != nil {
+		return x.DefaultBackend
 	}
 	return ""
 }
 
 func (x *Frontend) GetDescription() string {
-	if x != nil && x.Description != nil {
-		return *x.Description
+	if x != nil {
+		return x.Description
 	}
 	return ""
 }
 
 func (x *Frontend) GetDisabled() bool {
-	if x != nil && x.Disabled != nil {
-		return *x.Disabled
+	if x != nil {
+		return x.Disabled
 	}
 	return false
 }
 
 func (x *Frontend) GetEnabled() bool {
-	if x != nil && x.Enabled != nil {
-		return *x.Enabled
+	if x != nil {
+		return x.Enabled
 	}
 	return false
 }
 
 func (x *Frontend) GetId() int32 {
-	if x != nil && x.Id != nil {
-		return *x.Id
+	if x != nil {
+		return x.Id
 	}
 	return 0
 }
 
 func (x *Frontend) GetName() string {
-	if x != nil && x.Name != nil {
-		return *x.Name
+	if x != nil {
+		return x.Name
 	}
 	return ""
 }
 
 func (x *Frontend) GetMode() string {
-	if x != nil && x.Mode != nil {
-		return *x.Mode
+	if x != nil {
+		return x.Mode
 	}
 	return ""
 }
@@ -591,23 +591,15 @@ var File_frontend_proto protoreflect.FileDescriptor
 const file_frontend_proto_rawDesc = "" +
 	"\n" +
 	"\x0efrontend.proto\x12\n" +
-	"haproxy.v1\"\xbc\x02\n" +
-	"\bFrontend\x12,\n" +
-	"\x0fdefault_backend\x18\x01 \x01(\tH\x00R\x0edefaultBackend\x88\x01\x01\x12%\n" +
-	"\vdescription\x18\x02 \x01(\tH\x01R\vdescription\x88\x01\x01\x12\x1f\n" +
-	"\bdisabled\x18\x03 \x01(\bH\x02R\bdisabled\x88\x01\x01\x12\x1d\n" +
-	"\aenabled\x18\x04 \x01(\bH\x03R\aenabled\x88\x01\x01\x12\x13\n" +
-	"\x02id\x18\x05 \x01(\x05H\x04R\x02id\x88\x01\x01\x12\x17\n" +
-	"\x04name\x18\x06 \x01(\tH\x05R\x04name\x88\x01\x01\x12\x17\n" +
-	"\x04mode\x18\a \x01(\tH\x06R\x04mode\x88\x01\x01B\x12\n" +
-	"\x10_default_backendB\x0e\n" +
-	"\f_descriptionB\v\n" +
-	"\t_disabledB\n" +
-	"\n" +
-	"\b_enabledB\x05\n" +
-	"\x03_idB\a\n" +
-	"\x05_nameB\a\n" +
-	"\x05_mode\"p\n" +
+	"haproxy.v1\"\xc3\x01\n" +
+	"\bFrontend\x12'\n" +
+	"\x0fdefault_backend\x18\x01 \x01(\tR\x0edefaultBackend\x12 \n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x1a\n" +
+	"\bdisabled\x18\x03 \x01(\bR\bdisabled\x12\x18\n" +
+	"\aenabled\x18\x04 \x01(\bR\aenabled\x12\x0e\n" +
+	"\x02id\x18\x05 \x01(\x05R\x02id\x12\x12\n" +
+	"\x04name\x18\x06 \x01(\tR\x04name\x12\x12\n" +
+	"\x04mode\x18\a \x01(\tR\x04mode\"p\n" +
 	"\x15CreateFrontendRequest\x12%\n" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x120\n" +
 	"\bfrontend\x18\x02 \x01(\v2\x14.haproxy.v1.FrontendR\bfrontend\"J\n" +
@@ -678,7 +670,6 @@ func file_frontend_proto_init() {
 	if File_frontend_proto != nil {
 		return
 	}
-	file_frontend_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

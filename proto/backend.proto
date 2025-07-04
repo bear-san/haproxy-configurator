@@ -11,9 +11,9 @@ message BackendBalance {
 
 // Backend represents a HAProxy backend configuration
 message Backend {
-  optional int32 id = 1;
-  optional BackendBalance balance = 2;
-  optional string name = 3;
+  int32 id = 1;
+  BackendBalance balance = 2;
+  string name = 3;
   string mode = 4; // tcp, http
 }
 

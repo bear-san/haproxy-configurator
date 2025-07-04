@@ -69,9 +69,9 @@ func (x *BackendBalance) GetAlgorithm() string {
 // Backend represents a HAProxy backend configuration
 type Backend struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            *int32                 `protobuf:"varint,1,opt,name=id,proto3,oneof" json:"id,omitempty"`
-	Balance       *BackendBalance        `protobuf:"bytes,2,opt,name=balance,proto3,oneof" json:"balance,omitempty"`
-	Name          *string                `protobuf:"bytes,3,opt,name=name,proto3,oneof" json:"name,omitempty"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Balance       *BackendBalance        `protobuf:"bytes,2,opt,name=balance,proto3" json:"balance,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	Mode          string                 `protobuf:"bytes,4,opt,name=mode,proto3" json:"mode,omitempty"` // tcp, http
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -108,8 +108,8 @@ func (*Backend) Descriptor() ([]byte, []int) {
 }
 
 func (x *Backend) GetId() int32 {
-	if x != nil && x.Id != nil {
-		return *x.Id
+	if x != nil {
+		return x.Id
 	}
 	return 0
 }
@@ -122,8 +122,8 @@ func (x *Backend) GetBalance() *BackendBalance {
 }
 
 func (x *Backend) GetName() string {
-	if x != nil && x.Name != nil {
-		return *x.Name
+	if x != nil {
+		return x.Name
 	}
 	return ""
 }
@@ -614,16 +614,12 @@ const file_backend_proto_rawDesc = "" +
 	"\rbackend.proto\x12\n" +
 	"haproxy.v1\".\n" +
 	"\x0eBackendBalance\x12\x1c\n" +
-	"\talgorithm\x18\x01 \x01(\tR\talgorithm\"\xa2\x01\n" +
-	"\aBackend\x12\x13\n" +
-	"\x02id\x18\x01 \x01(\x05H\x00R\x02id\x88\x01\x01\x129\n" +
-	"\abalance\x18\x02 \x01(\v2\x1a.haproxy.v1.BackendBalanceH\x01R\abalance\x88\x01\x01\x12\x17\n" +
-	"\x04name\x18\x03 \x01(\tH\x02R\x04name\x88\x01\x01\x12\x12\n" +
-	"\x04mode\x18\x04 \x01(\tR\x04modeB\x05\n" +
-	"\x03_idB\n" +
-	"\n" +
-	"\b_balanceB\a\n" +
-	"\x05_name\"l\n" +
+	"\talgorithm\x18\x01 \x01(\tR\talgorithm\"w\n" +
+	"\aBackend\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x124\n" +
+	"\abalance\x18\x02 \x01(\v2\x1a.haproxy.v1.BackendBalanceR\abalance\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x12\n" +
+	"\x04mode\x18\x04 \x01(\tR\x04mode\"l\n" +
 	"\x14CreateBackendRequest\x12%\n" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x12-\n" +
 	"\abackend\x18\x02 \x01(\v2\x13.haproxy.v1.BackendR\abackend\"F\n" +
@@ -696,7 +692,6 @@ func file_backend_proto_init() {
 	if File_backend_proto != nil {
 		return
 	}
-	file_backend_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

@@ -24,12 +24,12 @@ const (
 // Bind represents a HAProxy bind configuration
 type Bind struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            *string                `protobuf:"bytes,1,opt,name=id,proto3,oneof" json:"id,omitempty"`
-	Name          *string                `protobuf:"bytes,2,opt,name=name,proto3,oneof" json:"name,omitempty"`
-	Address       *string                `protobuf:"bytes,3,opt,name=address,proto3,oneof" json:"address,omitempty"`
-	Port          *int32                 `protobuf:"varint,4,opt,name=port,proto3,oneof" json:"port,omitempty"`
-	V4V6          *bool                  `protobuf:"varint,5,opt,name=v4v6,proto3,oneof" json:"v4v6,omitempty"`
-	V6Only        *bool                  `protobuf:"varint,6,opt,name=v6only,proto3,oneof" json:"v6only,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Address       string                 `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
+	Port          int32                  `protobuf:"varint,4,opt,name=port,proto3" json:"port,omitempty"`
+	V4V6          bool                   `protobuf:"varint,5,opt,name=v4v6,proto3" json:"v4v6,omitempty"`
+	V6Only        bool                   `protobuf:"varint,6,opt,name=v6only,proto3" json:"v6only,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -65,43 +65,43 @@ func (*Bind) Descriptor() ([]byte, []int) {
 }
 
 func (x *Bind) GetId() string {
-	if x != nil && x.Id != nil {
-		return *x.Id
+	if x != nil {
+		return x.Id
 	}
 	return ""
 }
 
 func (x *Bind) GetName() string {
-	if x != nil && x.Name != nil {
-		return *x.Name
+	if x != nil {
+		return x.Name
 	}
 	return ""
 }
 
 func (x *Bind) GetAddress() string {
-	if x != nil && x.Address != nil {
-		return *x.Address
+	if x != nil {
+		return x.Address
 	}
 	return ""
 }
 
 func (x *Bind) GetPort() int32 {
-	if x != nil && x.Port != nil {
-		return *x.Port
+	if x != nil {
+		return x.Port
 	}
 	return 0
 }
 
 func (x *Bind) GetV4V6() bool {
-	if x != nil && x.V4V6 != nil {
-		return *x.V4V6
+	if x != nil {
+		return x.V4V6
 	}
 	return false
 }
 
 func (x *Bind) GetV6Only() bool {
-	if x != nil && x.V6Only != nil {
-		return *x.V6Only
+	if x != nil {
+		return x.V6Only
 	}
 	return false
 }
@@ -616,21 +616,14 @@ const file_bind_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
 	"bind.proto\x12\n" +
-	"haproxy.v1\"\xdb\x01\n" +
-	"\x04Bind\x12\x13\n" +
-	"\x02id\x18\x01 \x01(\tH\x00R\x02id\x88\x01\x01\x12\x17\n" +
-	"\x04name\x18\x02 \x01(\tH\x01R\x04name\x88\x01\x01\x12\x1d\n" +
-	"\aaddress\x18\x03 \x01(\tH\x02R\aaddress\x88\x01\x01\x12\x17\n" +
-	"\x04port\x18\x04 \x01(\x05H\x03R\x04port\x88\x01\x01\x12\x17\n" +
-	"\x04v4v6\x18\x05 \x01(\bH\x04R\x04v4v6\x88\x01\x01\x12\x1b\n" +
-	"\x06v6only\x18\x06 \x01(\bH\x05R\x06v6only\x88\x01\x01B\x05\n" +
-	"\x03_idB\a\n" +
-	"\x05_nameB\n" +
-	"\n" +
-	"\b_addressB\a\n" +
-	"\x05_portB\a\n" +
-	"\x05_v4v6B\t\n" +
-	"\a_v6only\"\x85\x01\n" +
+	"haproxy.v1\"\x84\x01\n" +
+	"\x04Bind\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
+	"\aaddress\x18\x03 \x01(\tR\aaddress\x12\x12\n" +
+	"\x04port\x18\x04 \x01(\x05R\x04port\x12\x12\n" +
+	"\x04v4v6\x18\x05 \x01(\bR\x04v4v6\x12\x16\n" +
+	"\x06v6only\x18\x06 \x01(\bR\x06v6only\"\x85\x01\n" +
 	"\x11CreateBindRequest\x12%\n" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x12#\n" +
 	"\rfrontend_name\x18\x02 \x01(\tR\ffrontendName\x12$\n" +
@@ -705,7 +698,6 @@ func file_bind_proto_init() {
 	if File_bind_proto != nil {
 		return
 	}
-	file_bind_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
