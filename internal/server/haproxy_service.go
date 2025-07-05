@@ -49,10 +49,12 @@ func NewHAProxyManagerServer() *HAProxyManagerServer {
 
 // Transaction operations
 func (s *HAProxyManagerServer) GetVersion(ctx context.Context, req *pb.GetVersionRequest) (*pb.GetVersionResponse, error) {
-	// TODO: Implement version retrieval from HAProxy API
-	// For now, return a default version
+	version, err := s.client.GetVersion()
+	if err != nil {
+		return nil, handleHAProxyError(err)
+	}
 	return &pb.GetVersionResponse{
-		Version: 1,
+		Version: derefInt(version),
 	}, nil
 }
 
