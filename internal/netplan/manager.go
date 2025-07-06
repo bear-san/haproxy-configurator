@@ -73,7 +73,8 @@ func (m *Manager) AddIPAddress(ipAddr string, _ int) error {
 	subnetMask, err := m.getSubnetMaskForIP(ipAddr)
 	if err != nil {
 		// Log warning but continue with /32 default
-		return fmt.Errorf("failed to determine subnet mask for IP %s: %w", ipAddr, err)
+		fmt.Printf("Warning: failed to determine subnet mask for IP %s: %v, defaulting to /32\n", ipAddr, err)
+		subnetMask = "/32"
 	}
 
 	fullAddr := fmt.Sprintf("%s%s", ipAddr, subnetMask)
@@ -98,11 +99,6 @@ func (m *Manager) AddIPAddress(ipAddr string, _ int) error {
 
 	// Track the IP address
 	m.addresses[ipAddr] = interfaceName
-
-	// Generate netplan configuration (but don't apply yet)
-	if err := m.generateNetplan(); err != nil {
-		return fmt.Errorf("failed to generate Netplan config: %w", err)
-	}
 
 	return nil
 }
@@ -160,16 +156,17 @@ func (m *Manager) RemoveIPAddress(ipAddr string) error {
 	// Remove from tracking
 	delete(m.addresses, ipAddr)
 
-	// Generate netplan configuration (but don't apply yet)
+	return nil
+}
+
+// ApplyNetplan generates and applies the Netplan configuration
+func (m *Manager) ApplyNetplan() error {
+	// Generate the configuration first
 	if err := m.generateNetplan(); err != nil {
 		return fmt.Errorf("failed to generate Netplan config: %w", err)
 	}
 
-	return nil
-}
-
-// ApplyNetplan applies the Netplan configuration
-func (m *Manager) ApplyNetplan() error {
+	// Then apply it
 	cmd := exec.Command("netplan", "apply")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -314,4 +311,3 @@ func (m *Manager) getSubnetMaskForIP(ipAddr string) (string, error) {
 
 	return "/32", fmt.Errorf("no subnet found for IP %s, defaulting to /32", ipAddr)
 }
-
