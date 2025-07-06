@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	port = flag.Int("port", 50051, "The server port")
+	port         = flag.Int("port", 50051, "The server port")
+	netplanConfig = flag.String("netplan-config", "", "Path to the Netplan configuration file (optional)")
 )
 
 func main() {
@@ -30,6 +31,17 @@ func main() {
 
 	// Create and register the HAProxy manager service
 	haproxyService := server.NewHAProxyManagerServer()
+	
+	// Configure Netplan integration if config file is provided
+	if *netplanConfig != "" {
+		log.Printf("Initializing Netplan integration with config: %s", *netplanConfig)
+		if err := haproxyService.SetNetplanConfig(*netplanConfig); err != nil {
+			log.Fatalf("Failed to initialize Netplan configuration: %v", err)
+		}
+	} else {
+		log.Printf("Netplan integration disabled (no config file provided)")
+	}
+	
 	pb.RegisterHAProxyManagerServiceServer(s, haproxyService)
 
 	// Enable reflection for development/debugging
