@@ -56,7 +56,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        file: Dockerfile
+        file: dev/Dockerfile.dev
         platforms: linux/amd64,linux/arm64
         push: false
         tags: haproxy-configurator:test
