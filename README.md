@@ -53,23 +53,7 @@ The service provides a unified `HAProxyManagerService` with operations for:
 
 ### Local Development Environment
 
-Use the development environment in the `dev/` directory for local testing:
-
-```bash
-# Start development environment with HAProxy
-cd dev
-docker-compose up --build
-
-# Or from project root
-docker-compose -f dev/docker-compose.yml up --build
-```
-
-This provides:
-- HAProxy Configurator gRPC server on `localhost:50051`
-- HAProxy with Data Plane API on `localhost:5555`
-- HAProxy stats page on `http://localhost:8404/stats`
-
-See [dev/README.md](dev/README.md) for more details.
+For local testing, you can run the server directly with a local HAProxy instance that has the Data Plane API enabled.
 
 ### Testing with grpcurl
 
@@ -96,12 +80,6 @@ grpcurl -plaintext localhost:50051 haproxy.v1.HAProxyManagerService/GetVersion
 ├── cmd/server/           # Server main entry point
 ├── examples/             # Configuration file examples
 │   └── netplan-config.yaml # Sample Netplan configuration
-├── dev/                  # Development environment
-│   ├── Dockerfile.dev    # Development Dockerfile
-│   ├── docker-compose.yml # Local development setup
-│   ├── haproxy.cfg       # HAProxy test configuration
-│   └── README.md         # Development environment guide
-├── Dockerfile            # Production Dockerfile (for GoReleaser)
 ├── .goreleaser.yml       # GoReleaser configuration
 ├── buf.yaml              # Buf configuration
 └── buf.gen.yaml          # Buf code generation config
@@ -114,11 +92,10 @@ This implementation provides:
 - ✅ Generated Go protobuf code
 - ✅ Full gRPC server implementation with HAProxy Data Plane API integration
 - ✅ Transaction-based configuration management
-- ✅ Docker multi-architecture builds (AMD64/ARM64)
 - ✅ GoReleaser CI/CD pipeline
 - ✅ Comprehensive error handling and type conversion
-- ✅ Development environment with docker-compose
 - ✅ Netplan integration for automatic IP address management
+- ✅ File-based transaction management for concurrent operations
 
 ## Netplan Integration
 
@@ -228,5 +205,5 @@ grpcurl -plaintext -d '{"transaction_id": "transaction-id"}' localhost:50051 hap
 
 Releases are automated via GitHub Actions:
 - Tag a version: `git tag v1.0.0 && git push origin v1.0.0`
-- Automatically builds binaries and Docker images for multiple architectures
-- Published to GitHub Releases and Docker registries
+- Automatically builds binaries for multiple architectures
+- Published to GitHub Releases
