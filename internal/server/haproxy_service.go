@@ -48,7 +48,7 @@ func NewHAProxyManagerServer() *HAProxyManagerServer {
 }
 
 // GetVersion retrieves the current HAProxy configuration version from the HAProxy Data Plane API
-func (s *HAProxyManagerServer) GetVersion(ctx context.Context, req *pb.GetVersionRequest) (*pb.GetVersionResponse, error) {
+func (s *HAProxyManagerServer) GetVersion(_ context.Context, _ *pb.GetVersionRequest) (*pb.GetVersionResponse, error) {
 	version, err := s.client.GetVersion()
 	if err != nil {
 		return nil, handleHAProxyError(err)
@@ -60,7 +60,7 @@ func (s *HAProxyManagerServer) GetVersion(ctx context.Context, req *pb.GetVersio
 
 // CreateTransaction creates a new configuration transaction in HAProxy
 // The transaction must be committed or closed after making configuration changes
-func (s *HAProxyManagerServer) CreateTransaction(ctx context.Context, req *pb.CreateTransactionRequest) (*pb.CreateTransactionResponse, error) {
+func (s *HAProxyManagerServer) CreateTransaction(_ context.Context, req *pb.CreateTransactionRequest) (*pb.CreateTransactionResponse, error) {
 	transaction, err := s.client.CreateTransaction(int(req.Version))
 	if err != nil {
 		return nil, handleHAProxyError(err)
@@ -72,7 +72,7 @@ func (s *HAProxyManagerServer) CreateTransaction(ctx context.Context, req *pb.Cr
 }
 
 // GetTransaction retrieves the details of a specific transaction by its ID
-func (s *HAProxyManagerServer) GetTransaction(ctx context.Context, req *pb.GetTransactionRequest) (*pb.GetTransactionResponse, error) {
+func (s *HAProxyManagerServer) GetTransaction(_ context.Context, req *pb.GetTransactionRequest) (*pb.GetTransactionResponse, error) {
 	if req.TransactionId == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "transaction ID is required")
 	}
@@ -88,7 +88,7 @@ func (s *HAProxyManagerServer) GetTransaction(ctx context.Context, req *pb.GetTr
 }
 
 // CommitTransaction commits a transaction, applying all configuration changes to HAProxy
-func (s *HAProxyManagerServer) CommitTransaction(ctx context.Context, req *pb.CommitTransactionRequest) (*pb.CommitTransactionResponse, error) {
+func (s *HAProxyManagerServer) CommitTransaction(_ context.Context, req *pb.CommitTransactionRequest) (*pb.CommitTransactionResponse, error) {
 	if req.TransactionId == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "transaction ID is required")
 	}
@@ -104,7 +104,7 @@ func (s *HAProxyManagerServer) CommitTransaction(ctx context.Context, req *pb.Co
 }
 
 // CloseTransaction closes a transaction without committing any changes
-func (s *HAProxyManagerServer) CloseTransaction(ctx context.Context, req *pb.CloseTransactionRequest) (*pb.CloseTransactionResponse, error) {
+func (s *HAProxyManagerServer) CloseTransaction(_ context.Context, req *pb.CloseTransactionRequest) (*pb.CloseTransactionResponse, error) {
 	if req.TransactionId == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "transaction ID is required")
 	}
@@ -121,7 +121,7 @@ func (s *HAProxyManagerServer) CloseTransaction(ctx context.Context, req *pb.Clo
 
 // CreateBackend creates a new backend configuration in HAProxy
 // A backend defines a set of servers to which the proxy will connect to forward incoming requests
-func (s *HAProxyManagerServer) CreateBackend(ctx context.Context, req *pb.CreateBackendRequest) (*pb.CreateBackendResponse, error) {
+func (s *HAProxyManagerServer) CreateBackend(_ context.Context, req *pb.CreateBackendRequest) (*pb.CreateBackendResponse, error) {
 	if req.Backend == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "backend is required")
 	}
@@ -138,7 +138,7 @@ func (s *HAProxyManagerServer) CreateBackend(ctx context.Context, req *pb.Create
 }
 
 // GetBackend retrieves a specific backend configuration by name
-func (s *HAProxyManagerServer) GetBackend(ctx context.Context, req *pb.GetBackendRequest) (*pb.GetBackendResponse, error) {
+func (s *HAProxyManagerServer) GetBackend(_ context.Context, req *pb.GetBackendRequest) (*pb.GetBackendResponse, error) {
 	if req.Name == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "backend name is required")
 	}
@@ -154,7 +154,7 @@ func (s *HAProxyManagerServer) GetBackend(ctx context.Context, req *pb.GetBacken
 }
 
 // ListBackends retrieves all backend configurations from HAProxy
-func (s *HAProxyManagerServer) ListBackends(ctx context.Context, req *pb.ListBackendsRequest) (*pb.ListBackendsResponse, error) {
+func (s *HAProxyManagerServer) ListBackends(_ context.Context, req *pb.ListBackendsRequest) (*pb.ListBackendsResponse, error) {
 	backends, err := s.client.ListBackends(req.TransactionId)
 	if err != nil {
 		return nil, handleHAProxyError(err)
@@ -171,7 +171,7 @@ func (s *HAProxyManagerServer) ListBackends(ctx context.Context, req *pb.ListBac
 }
 
 // UpdateBackend updates an existing backend configuration
-func (s *HAProxyManagerServer) UpdateBackend(ctx context.Context, req *pb.UpdateBackendRequest) (*pb.UpdateBackendResponse, error) {
+func (s *HAProxyManagerServer) UpdateBackend(_ context.Context, req *pb.UpdateBackendRequest) (*pb.UpdateBackendResponse, error) {
 	if req.Name == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "backend name is required")
 	}
@@ -191,7 +191,7 @@ func (s *HAProxyManagerServer) UpdateBackend(ctx context.Context, req *pb.Update
 }
 
 // DeleteBackend removes a backend configuration from HAProxy
-func (s *HAProxyManagerServer) DeleteBackend(ctx context.Context, req *pb.DeleteBackendRequest) (*pb.DeleteBackendResponse, error) {
+func (s *HAProxyManagerServer) DeleteBackend(_ context.Context, req *pb.DeleteBackendRequest) (*pb.DeleteBackendResponse, error) {
 	if req.Name == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "backend name is required")
 	}
@@ -206,7 +206,7 @@ func (s *HAProxyManagerServer) DeleteBackend(ctx context.Context, req *pb.Delete
 
 // CreateFrontend creates a new frontend configuration in HAProxy
 // A frontend defines how requests should be received and which backend to route them to
-func (s *HAProxyManagerServer) CreateFrontend(ctx context.Context, req *pb.CreateFrontendRequest) (*pb.CreateFrontendResponse, error) {
+func (s *HAProxyManagerServer) CreateFrontend(_ context.Context, req *pb.CreateFrontendRequest) (*pb.CreateFrontendResponse, error) {
 	if req.Frontend == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "frontend is required")
 	}
@@ -223,7 +223,7 @@ func (s *HAProxyManagerServer) CreateFrontend(ctx context.Context, req *pb.Creat
 }
 
 // GetFrontend retrieves a specific frontend configuration by name
-func (s *HAProxyManagerServer) GetFrontend(ctx context.Context, req *pb.GetFrontendRequest) (*pb.GetFrontendResponse, error) {
+func (s *HAProxyManagerServer) GetFrontend(_ context.Context, req *pb.GetFrontendRequest) (*pb.GetFrontendResponse, error) {
 	if req.Name == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "frontend name is required")
 	}
@@ -239,7 +239,7 @@ func (s *HAProxyManagerServer) GetFrontend(ctx context.Context, req *pb.GetFront
 }
 
 // ListFrontends retrieves all frontend configurations from HAProxy
-func (s *HAProxyManagerServer) ListFrontends(ctx context.Context, req *pb.ListFrontendsRequest) (*pb.ListFrontendsResponse, error) {
+func (s *HAProxyManagerServer) ListFrontends(_ context.Context, req *pb.ListFrontendsRequest) (*pb.ListFrontendsResponse, error) {
 	frontends, err := s.client.ListFrontends(req.TransactionId)
 	if err != nil {
 		return nil, handleHAProxyError(err)
@@ -256,7 +256,7 @@ func (s *HAProxyManagerServer) ListFrontends(ctx context.Context, req *pb.ListFr
 }
 
 // UpdateFrontend updates an existing frontend configuration
-func (s *HAProxyManagerServer) UpdateFrontend(ctx context.Context, req *pb.UpdateFrontendRequest) (*pb.UpdateFrontendResponse, error) {
+func (s *HAProxyManagerServer) UpdateFrontend(_ context.Context, req *pb.UpdateFrontendRequest) (*pb.UpdateFrontendResponse, error) {
 	if req.Name == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "frontend name is required")
 	}
@@ -276,7 +276,7 @@ func (s *HAProxyManagerServer) UpdateFrontend(ctx context.Context, req *pb.Updat
 }
 
 // DeleteFrontend removes a frontend configuration from HAProxy
-func (s *HAProxyManagerServer) DeleteFrontend(ctx context.Context, req *pb.DeleteFrontendRequest) (*pb.DeleteFrontendResponse, error) {
+func (s *HAProxyManagerServer) DeleteFrontend(_ context.Context, req *pb.DeleteFrontendRequest) (*pb.DeleteFrontendResponse, error) {
 	if req.Name == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "frontend name is required")
 	}
@@ -291,7 +291,7 @@ func (s *HAProxyManagerServer) DeleteFrontend(ctx context.Context, req *pb.Delet
 
 // CreateBind creates a new bind configuration for a frontend in HAProxy
 // A bind defines the listening address and port for a frontend
-func (s *HAProxyManagerServer) CreateBind(ctx context.Context, req *pb.CreateBindRequest) (*pb.CreateBindResponse, error) {
+func (s *HAProxyManagerServer) CreateBind(_ context.Context, req *pb.CreateBindRequest) (*pb.CreateBindResponse, error) {
 	if req.FrontendName == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "frontend name is required")
 	}
@@ -311,7 +311,7 @@ func (s *HAProxyManagerServer) CreateBind(ctx context.Context, req *pb.CreateBin
 }
 
 // GetBind retrieves a specific bind configuration by name from a frontend
-func (s *HAProxyManagerServer) GetBind(ctx context.Context, req *pb.GetBindRequest) (*pb.GetBindResponse, error) {
+func (s *HAProxyManagerServer) GetBind(_ context.Context, req *pb.GetBindRequest) (*pb.GetBindResponse, error) {
 	if req.FrontendName == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "frontend name is required")
 	}
@@ -330,7 +330,7 @@ func (s *HAProxyManagerServer) GetBind(ctx context.Context, req *pb.GetBindReque
 }
 
 // ListBinds retrieves all bind configurations for a specific frontend
-func (s *HAProxyManagerServer) ListBinds(ctx context.Context, req *pb.ListBindsRequest) (*pb.ListBindsResponse, error) {
+func (s *HAProxyManagerServer) ListBinds(_ context.Context, req *pb.ListBindsRequest) (*pb.ListBindsResponse, error) {
 	if req.FrontendName == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "frontend name is required")
 	}
@@ -351,7 +351,7 @@ func (s *HAProxyManagerServer) ListBinds(ctx context.Context, req *pb.ListBindsR
 }
 
 // UpdateBind updates an existing bind configuration for a frontend
-func (s *HAProxyManagerServer) UpdateBind(ctx context.Context, req *pb.UpdateBindRequest) (*pb.UpdateBindResponse, error) {
+func (s *HAProxyManagerServer) UpdateBind(_ context.Context, req *pb.UpdateBindRequest) (*pb.UpdateBindResponse, error) {
 	if req.FrontendName == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "frontend name is required")
 	}
@@ -371,7 +371,7 @@ func (s *HAProxyManagerServer) UpdateBind(ctx context.Context, req *pb.UpdateBin
 }
 
 // DeleteBind removes a bind configuration from a frontend
-func (s *HAProxyManagerServer) DeleteBind(ctx context.Context, req *pb.DeleteBindRequest) (*pb.DeleteBindResponse, error) {
+func (s *HAProxyManagerServer) DeleteBind(_ context.Context, req *pb.DeleteBindRequest) (*pb.DeleteBindResponse, error) {
 	if req.FrontendName == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "frontend name is required")
 	}
@@ -389,7 +389,7 @@ func (s *HAProxyManagerServer) DeleteBind(ctx context.Context, req *pb.DeleteBin
 
 // CreateServer creates a new server configuration in a backend
 // A server represents a backend server that will handle forwarded requests
-func (s *HAProxyManagerServer) CreateServer(ctx context.Context, req *pb.CreateServerRequest) (*pb.CreateServerResponse, error) {
+func (s *HAProxyManagerServer) CreateServer(_ context.Context, req *pb.CreateServerRequest) (*pb.CreateServerResponse, error) {
 	if req.BackendName == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "backend name is required")
 	}
@@ -409,7 +409,7 @@ func (s *HAProxyManagerServer) CreateServer(ctx context.Context, req *pb.CreateS
 }
 
 // GetServer retrieves a specific server configuration by name from a backend
-func (s *HAProxyManagerServer) GetServer(ctx context.Context, req *pb.GetServerRequest) (*pb.GetServerResponse, error) {
+func (s *HAProxyManagerServer) GetServer(_ context.Context, req *pb.GetServerRequest) (*pb.GetServerResponse, error) {
 	if req.BackendName == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "backend name is required")
 	}
@@ -428,7 +428,7 @@ func (s *HAProxyManagerServer) GetServer(ctx context.Context, req *pb.GetServerR
 }
 
 // ListServers retrieves all server configurations for a specific backend
-func (s *HAProxyManagerServer) ListServers(ctx context.Context, req *pb.ListServersRequest) (*pb.ListServersResponse, error) {
+func (s *HAProxyManagerServer) ListServers(_ context.Context, req *pb.ListServersRequest) (*pb.ListServersResponse, error) {
 	if req.BackendName == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "backend name is required")
 	}
@@ -449,7 +449,7 @@ func (s *HAProxyManagerServer) ListServers(ctx context.Context, req *pb.ListServ
 }
 
 // UpdateServer updates an existing server configuration in a backend
-func (s *HAProxyManagerServer) UpdateServer(ctx context.Context, req *pb.UpdateServerRequest) (*pb.UpdateServerResponse, error) {
+func (s *HAProxyManagerServer) UpdateServer(_ context.Context, req *pb.UpdateServerRequest) (*pb.UpdateServerResponse, error) {
 	if req.BackendName == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "backend name is required")
 	}
@@ -472,7 +472,7 @@ func (s *HAProxyManagerServer) UpdateServer(ctx context.Context, req *pb.UpdateS
 }
 
 // DeleteServer removes a server configuration from a backend
-func (s *HAProxyManagerServer) DeleteServer(ctx context.Context, req *pb.DeleteServerRequest) (*pb.DeleteServerResponse, error) {
+func (s *HAProxyManagerServer) DeleteServer(_ context.Context, req *pb.DeleteServerRequest) (*pb.DeleteServerResponse, error) {
 	if req.BackendName == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "backend name is required")
 	}
