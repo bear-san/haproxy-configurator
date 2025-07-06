@@ -1,6 +1,7 @@
 package netplan
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -321,6 +322,120 @@ func TestBackupFileCreation(t *testing.T) {
 			t.Logf("  %s", file.Name())
 		}
 		t.Error("Backup file was not created")
+	}
+}
+
+func TestTransactionBasicFlow(t *testing.T) {
+	cfg := &config.NetplanConfig{
+		Netplan: config.NetplanSettings{
+			InterfaceMappings: []config.InterfaceMapping{
+				{
+					Interface: "eth0",
+					Subnets:   []string{"192.168.1.0/24"},
+				},
+			},
+			ConfigPath: "/tmp/test-netplan-transaction.yaml",
+		},
+	}
+
+	manager := NewManager(cfg)
+	transactionID := "test-tx-123"
+
+	// Test adding IP address to transaction
+	err := manager.AddIPAddressToTransaction(transactionID, "192.168.1.100", 80)
+	if err != nil {
+		t.Errorf("Failed to add IP to transaction: %v", err)
+	}
+
+	// Test adding removal to same transaction
+	err = manager.RemoveIPAddressFromTransaction(transactionID, "192.168.1.101")
+	if err != nil {
+		t.Errorf("Failed to add removal to transaction: %v", err)
+	}
+
+	// Load transaction and verify changes
+	transaction, err := manager.loadTransaction(transactionID)
+	if err != nil {
+		t.Errorf("Failed to load transaction: %v", err)
+	}
+
+	if len(transaction.Changes) != 2 {
+		t.Errorf("Expected 2 changes, got %d", len(transaction.Changes))
+	}
+
+	if transaction.Changes[0].Operation != "add" || transaction.Changes[0].IPAddress != "192.168.1.100" {
+		t.Errorf("First change incorrect: %+v", transaction.Changes[0])
+	}
+
+	if transaction.Changes[1].Operation != "remove" || transaction.Changes[1].IPAddress != "192.168.1.101" {
+		t.Errorf("Second change incorrect: %+v", transaction.Changes[1])
+	}
+
+	// Clean up transaction file
+	transactionFile := filepath.Join(manager.transactionDir, fmt.Sprintf("transaction-%s.json", transactionID))
+	_ = os.Remove(transactionFile)
+}
+
+func TestTransactionCommit(t *testing.T) {
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, "test-netplan.yaml")
+
+	cfg := &config.NetplanConfig{
+		Netplan: config.NetplanSettings{
+			InterfaceMappings: []config.InterfaceMapping{
+				{
+					Interface: "eth0",
+					Subnets:   []string{"192.168.1.0/24"},
+				},
+			},
+			ConfigPath:    configPath,
+			BackupEnabled: false,
+		},
+	}
+
+	manager := NewManager(cfg)
+	transactionID := "test-commit-tx-456"
+
+	// Add changes to transaction
+	err := manager.AddIPAddressToTransaction(transactionID, "192.168.1.100", 80)
+	if err != nil {
+		t.Errorf("Failed to add IP to transaction: %v", err)
+	}
+
+	err = manager.AddIPAddressToTransaction(transactionID, "192.168.1.101", 443)
+	if err != nil {
+		t.Errorf("Failed to add second IP to transaction: %v", err)
+	}
+
+	// Commit transaction
+	err = manager.CommitTransaction(transactionID)
+	if err != nil {
+		t.Errorf("Failed to commit transaction: %v", err)
+	}
+
+	// Verify Netplan config was updated
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		t.Error("Netplan config file was not created")
+	}
+
+	// Verify tracking was updated
+	tracked := manager.GetTrackedAddresses()
+	if len(tracked) != 2 {
+		t.Errorf("Expected 2 tracked addresses, got %d", len(tracked))
+	}
+
+	if tracked["192.168.1.100"] != "eth0" {
+		t.Errorf("IP 192.168.1.100 not tracked correctly")
+	}
+
+	if tracked["192.168.1.101"] != "eth0" {
+		t.Errorf("IP 192.168.1.101 not tracked correctly")
+	}
+
+	// Verify transaction was moved to committed directory
+	committedFile := filepath.Join(manager.transactionDir, "committed", fmt.Sprintf("transaction-%s.json", transactionID))
+	if _, err := os.Stat(committedFile); os.IsNotExist(err) {
+		t.Error("Transaction was not moved to committed directory")
 	}
 }
 

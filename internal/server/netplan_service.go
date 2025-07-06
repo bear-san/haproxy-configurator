@@ -41,17 +41,17 @@ func (s *HAProxyManagerServer) CreateBindWithNetplan(req *pb.CreateBindRequest) 
 	log.Printf("Creating bind with Netplan integration for frontend %s, address %s:%d",
 		req.FrontendName, req.Bind.Address, req.Bind.Port)
 
-	// Handle Netplan IP address assignment before creating bind
+	// Handle Netplan IP address assignment via transaction
 	if s.netplanMgr != nil && req.Bind != nil && req.Bind.Address != "" {
 		port := int(req.Bind.Port)
-		log.Printf("Attempting to add IP address %s to Netplan before HAProxy bind creation", req.Bind.Address)
+		log.Printf("Adding IP address %s to Netplan transaction %s", req.Bind.Address, req.TransactionId)
 
-		if err := s.netplanMgr.AddIPAddress(req.Bind.Address, port); err != nil {
-			log.Printf("WARNING: Failed to add IP address %s to Netplan: %v", req.Bind.Address, err)
+		if err := s.netplanMgr.AddIPAddressToTransaction(req.TransactionId, req.Bind.Address, port); err != nil {
+			log.Printf("WARNING: Failed to add IP address %s to Netplan transaction: %v", req.Bind.Address, err)
 			log.Printf("Continuing with HAProxy bind creation without Netplan integration")
-			// Continue with bind creation even if Netplan fails
+			// Continue with bind creation even if Netplan transaction fails
 		} else {
-			log.Printf("Successfully added IP address %s to Netplan configuration", req.Bind.Address)
+			log.Printf("Successfully added IP address %s to Netplan transaction %s", req.Bind.Address, req.TransactionId)
 		}
 	} else {
 		log.Printf("Netplan integration disabled or no IP address specified, creating HAProxy bind only")
@@ -61,12 +61,9 @@ func (s *HAProxyManagerServer) CreateBindWithNetplan(req *pb.CreateBindRequest) 
 	bind := convertBindFromProto(req.Bind)
 	created, err := s.client.AddBind(req.FrontendName, req.TransactionId, *bind)
 	if err != nil {
-		// If HAProxy bind creation fails, try to rollback Netplan changes
-		if s.netplanMgr != nil && req.Bind != nil && req.Bind.Address != "" {
-			if rollbackErr := s.netplanMgr.RemoveIPAddress(req.Bind.Address); rollbackErr != nil {
-				log.Printf("Failed to rollback Netplan IP address %s: %v", req.Bind.Address, rollbackErr)
-			}
-		}
+		// HAProxy bind creation failed - no need to rollback since we're using transactions
+		// The transaction will not be committed if HAProxy fails
+		log.Printf("HAProxy bind creation failed: %v", err)
 		return nil, handleHAProxyError(err)
 	}
 
@@ -86,9 +83,9 @@ func (s *HAProxyManagerServer) DeleteBindWithNetplan(req *pb.DeleteBindRequest) 
 		bind, err := s.client.GetBind(req.Name, req.FrontendName, req.TransactionId)
 		if err == nil && bind.Address != nil {
 			bindAddress = *bind.Address
-			log.Printf("Found bind address %s to clean up from Netplan", bindAddress)
+			log.Printf("Found bind address %s to add to Netplan transaction for removal", bindAddress)
 		} else {
-			log.Printf("Could not retrieve bind address for Netplan cleanup: %v", err)
+			log.Printf("Could not retrieve bind address for Netplan transaction: %v", err)
 		}
 	}
 
@@ -101,14 +98,14 @@ func (s *HAProxyManagerServer) DeleteBindWithNetplan(req *pb.DeleteBindRequest) 
 	}
 	log.Printf("Successfully deleted bind %s from HAProxy", req.Name)
 
-	// Remove IP address from Netplan after successful HAProxy deletion
+	// Add IP address removal to Netplan transaction
 	if s.netplanMgr != nil && bindAddress != "" {
-		log.Printf("Attempting to remove IP address %s from Netplan", bindAddress)
-		if netplanErr := s.netplanMgr.RemoveIPAddress(bindAddress); netplanErr != nil {
-			log.Printf("WARNING: Failed to remove IP address %s from Netplan: %v", bindAddress, netplanErr)
-			// Don't fail the entire operation for Netplan errors
+		log.Printf("Adding IP address %s removal to Netplan transaction %s", bindAddress, req.TransactionId)
+		if err := s.netplanMgr.RemoveIPAddressFromTransaction(req.TransactionId, bindAddress); err != nil {
+			log.Printf("WARNING: Failed to add IP address %s removal to Netplan transaction: %v", bindAddress, err)
+			// Don't fail the entire operation for Netplan transaction errors
 		} else {
-			log.Printf("Successfully removed IP address %s from Netplan configuration", bindAddress)
+			log.Printf("Successfully added IP address %s removal to Netplan transaction %s", bindAddress, req.TransactionId)
 		}
 	} else {
 		log.Printf("No IP address to remove from Netplan or Netplan integration disabled")
@@ -130,16 +127,25 @@ func (s *HAProxyManagerServer) CommitTransactionWithNetplan(req *pb.CommitTransa
 	}
 	log.Printf("Successfully committed HAProxy transaction %s", req.TransactionId)
 
-	// Apply Netplan configuration after successful HAProxy commit
+	// Commit Netplan transaction and apply configuration after successful HAProxy commit
 	if s.netplanMgr != nil {
-		log.Printf("Applying Netplan configuration after successful HAProxy commit")
-		if netplanErr := s.netplanMgr.ApplyNetplan(); netplanErr != nil {
-			log.Printf("WARNING: Failed to apply Netplan configuration: %v", netplanErr)
-			log.Printf("HAProxy transaction has been committed successfully, but Netplan changes may not be active")
+		log.Printf("Committing Netplan transaction %s", req.TransactionId)
+		if netplanErr := s.netplanMgr.CommitTransaction(req.TransactionId); netplanErr != nil {
+			log.Printf("WARNING: Failed to commit Netplan transaction %s: %v", req.TransactionId, netplanErr)
+			log.Printf("HAProxy transaction has been committed successfully, but Netplan changes may not be applied")
 			// Log the error but don't fail the transaction commit
 			// The HAProxy changes are already committed at this point
 		} else {
-			log.Printf("Successfully applied Netplan configuration")
+			log.Printf("Successfully committed Netplan transaction %s", req.TransactionId)
+
+			// Apply Netplan configuration after successful transaction commit
+			log.Printf("Applying Netplan configuration")
+			if applyErr := s.netplanMgr.ApplyNetplan(); applyErr != nil {
+				log.Printf("WARNING: Failed to apply Netplan configuration: %v", applyErr)
+				log.Printf("Netplan configuration files have been updated, but network changes may not be active")
+			} else {
+				log.Printf("Successfully applied Netplan configuration")
+			}
 		}
 	} else {
 		log.Printf("Netplan integration disabled, transaction commit complete")

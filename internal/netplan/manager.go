@@ -1,6 +1,7 @@
 package netplan
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -8,16 +9,36 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/bear-san/haproxy-configurator/internal/config"
 	"gopkg.in/yaml.v3"
 )
 
+// TransactionChange represents a change to be applied in a transaction
+type TransactionChange struct {
+	Operation  string `json:"operation"`   // "add" or "remove"
+	IPAddress  string `json:"ip_address"`
+	Interface  string `json:"interface"`
+	Port       int    `json:"port,omitempty"`
+	SubnetMask string `json:"subnet_mask,omitempty"`
+}
+
+// Transaction represents a Netplan transaction
+type Transaction struct {
+	TransactionID string              `json:"transaction_id"`
+	CreatedAt     time.Time           `json:"created_at"`
+	Status        string              `json:"status"` // "pending", "committed", "failed"
+	Changes       []TransactionChange `json:"changes"`
+}
+
 // Manager handles Netplan configuration operations
 type Manager struct {
-	config    *config.NetplanConfig
-	addresses map[string]string // IP -> Interface mapping for tracking
+	config        *config.NetplanConfig
+	addresses     map[string]string // IP -> Interface mapping for tracking
+	transactionDir string           // Directory for transaction files
+	mutex         sync.RWMutex      // Protects addresses map
 }
 
 // NetplanConfiguration represents the structure of a Netplan YAML file
@@ -38,9 +59,15 @@ type NetplanInterface struct {
 
 // NewManager creates a new Netplan manager
 func NewManager(cfg *config.NetplanConfig) *Manager {
+	transactionDir := "/tmp/haproxy-netplan-transactions"
+	// Ensure transaction directory exists
+	_ = os.MkdirAll(transactionDir, 0755)
+	_ = os.MkdirAll(filepath.Join(transactionDir, "committed"), 0755)
+
 	return &Manager{
-		config:    cfg,
-		addresses: make(map[string]string),
+		config:         cfg,
+		addresses:      make(map[string]string),
+		transactionDir: transactionDir,
 	}
 }
 
@@ -310,4 +337,247 @@ func (m *Manager) getSubnetMaskForIP(ipAddr string) (string, error) {
 	}
 
 	return "/32", fmt.Errorf("no subnet found for IP %s, defaulting to /32", ipAddr)
+}
+
+// Transaction management methods
+
+// AddIPAddressToTransaction adds an IP address change to a transaction
+func (m *Manager) AddIPAddressToTransaction(transactionID, ipAddr string, port int) error {
+	if ipAddr == "" {
+		return fmt.Errorf("IP address cannot be empty")
+	}
+
+	// Find the appropriate interface for this IP
+	interfaceName, err := m.config.FindInterfaceForIP(ipAddr)
+	if err != nil {
+		return fmt.Errorf("failed to find interface for IP %s: %w", ipAddr, err)
+	}
+
+	// Get the appropriate subnet mask for this IP
+	subnetMask, err := m.getSubnetMaskForIP(ipAddr)
+	if err != nil {
+		fmt.Printf("Warning: failed to determine subnet mask for IP %s: %v, defaulting to /32\n", ipAddr, err)
+		subnetMask = "/32"
+	}
+
+	// Add to transaction
+	return m.addChangeToTransaction(transactionID, TransactionChange{
+		Operation:  "add",
+		IPAddress:  ipAddr,
+		Interface:  interfaceName,
+		Port:       port,
+		SubnetMask: subnetMask,
+	})
+}
+
+// RemoveIPAddressFromTransaction adds an IP address removal to a transaction
+func (m *Manager) RemoveIPAddressFromTransaction(transactionID, ipAddr string) error {
+	if ipAddr == "" {
+		return fmt.Errorf("IP address cannot be empty")
+	}
+
+	// Find the appropriate interface for this IP
+	interfaceName, err := m.config.FindInterfaceForIP(ipAddr)
+	if err != nil {
+		return fmt.Errorf("failed to find interface for IP %s: %w", ipAddr, err)
+	}
+
+	// Add to transaction
+	return m.addChangeToTransaction(transactionID, TransactionChange{
+		Operation: "remove",
+		IPAddress: ipAddr,
+		Interface: interfaceName,
+	})
+}
+
+// CommitTransaction applies all changes in a transaction
+func (m *Manager) CommitTransaction(transactionID string) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	// Load the transaction
+	transaction, err := m.loadTransaction(transactionID)
+	if err != nil {
+		return fmt.Errorf("failed to load transaction %s: %w", transactionID, err)
+	}
+
+	if transaction.Status != "pending" {
+		return fmt.Errorf("transaction %s is not in pending status: %s", transactionID, transaction.Status)
+	}
+
+	// Load current Netplan configuration
+	netplanConfig, err := m.loadNetplanConfig()
+	if err != nil {
+		return fmt.Errorf("failed to load Netplan config: %w", err)
+	}
+
+	// Apply all changes in the transaction
+	for _, change := range transaction.Changes {
+		if err := m.applyChange(netplanConfig, change); err != nil {
+			// Mark transaction as failed
+			m.markTransactionFailed(transactionID, err)
+			return fmt.Errorf("failed to apply change %+v: %w", change, err)
+		}
+	}
+
+	// Save the Netplan configuration
+	if err := m.saveNetplanConfig(netplanConfig); err != nil {
+		m.markTransactionFailed(transactionID, err)
+		return fmt.Errorf("failed to save Netplan config: %w", err)
+	}
+
+	// Update tracking state
+	for _, change := range transaction.Changes {
+		switch change.Operation {
+		case "add":
+			m.addresses[change.IPAddress] = change.Interface
+		case "remove":
+			delete(m.addresses, change.IPAddress)
+		}
+	}
+
+	// Mark transaction as committed
+	transaction.Status = "committed"
+	if err := m.saveTransaction(transaction); err != nil {
+		return fmt.Errorf("failed to update transaction status: %w", err)
+	}
+
+	// Move transaction to committed directory
+	if err := m.moveTransactionToCommitted(transactionID); err != nil {
+		return fmt.Errorf("failed to move transaction to committed: %w", err)
+	}
+
+	return nil
+}
+
+// addChangeToTransaction adds a change to an existing transaction or creates a new one
+func (m *Manager) addChangeToTransaction(transactionID string, change TransactionChange) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	var transaction *Transaction
+	var err error
+
+	// Try to load existing transaction
+	transaction, err = m.loadTransaction(transactionID)
+	if err != nil {
+		// Create new transaction if it doesn't exist
+		transaction = &Transaction{
+			TransactionID: transactionID,
+			CreatedAt:     time.Now(),
+			Status:        "pending",
+			Changes:       []TransactionChange{},
+		}
+	}
+
+	if transaction.Status != "pending" {
+		return fmt.Errorf("cannot add change to transaction %s with status %s", transactionID, transaction.Status)
+	}
+
+	// Add the change
+	transaction.Changes = append(transaction.Changes, change)
+
+	// Save the transaction
+	return m.saveTransaction(transaction)
+}
+
+// loadTransaction loads a transaction from file
+func (m *Manager) loadTransaction(transactionID string) (*Transaction, error) {
+	filePath := filepath.Join(m.transactionDir, fmt.Sprintf("transaction-%s.json", transactionID))
+	
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var transaction Transaction
+	if err := json.Unmarshal(data, &transaction); err != nil {
+		return nil, fmt.Errorf("failed to parse transaction file: %w", err)
+	}
+
+	return &transaction, nil
+}
+
+// saveTransaction saves a transaction to file
+func (m *Manager) saveTransaction(transaction *Transaction) error {
+	filePath := filepath.Join(m.transactionDir, fmt.Sprintf("transaction-%s.json", transaction.TransactionID))
+	
+	data, err := json.MarshalIndent(transaction, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal transaction: %w", err)
+	}
+
+	if err := os.WriteFile(filePath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write transaction file: %w", err)
+	}
+
+	return nil
+}
+
+// applyChange applies a single change to the Netplan configuration
+func (m *Manager) applyChange(netplanConfig *NetplanConfiguration, change TransactionChange) error {
+	if netplanConfig.Network.Ethernets == nil {
+		netplanConfig.Network.Ethernets = make(map[string]NetplanInterface)
+	}
+
+	iface := netplanConfig.Network.Ethernets[change.Interface]
+
+	switch change.Operation {
+	case "add":
+		fullAddr := fmt.Sprintf("%s%s", change.IPAddress, change.SubnetMask)
+		
+		// Check if IP already exists
+		for _, addr := range iface.Addresses {
+			if strings.HasPrefix(addr, change.IPAddress) {
+				// IP already exists, no need to add
+				return nil
+			}
+		}
+		
+		// Add the new IP address
+		iface.Addresses = append(iface.Addresses, fullAddr)
+		netplanConfig.Network.Ethernets[change.Interface] = iface
+
+	case "remove":
+		// Filter out the IP address
+		var newAddresses []string
+		for _, addr := range iface.Addresses {
+			if !strings.HasPrefix(addr, change.IPAddress) {
+				newAddresses = append(newAddresses, addr)
+			}
+		}
+		
+		iface.Addresses = newAddresses
+		netplanConfig.Network.Ethernets[change.Interface] = iface
+		
+		// If no addresses left, remove the interface from config
+		if len(iface.Addresses) == 0 {
+			delete(netplanConfig.Network.Ethernets, change.Interface)
+		}
+
+	default:
+		return fmt.Errorf("unknown operation: %s", change.Operation)
+	}
+
+	return nil
+}
+
+// markTransactionFailed marks a transaction as failed
+func (m *Manager) markTransactionFailed(transactionID string, err error) {
+	transaction, loadErr := m.loadTransaction(transactionID)
+	if loadErr != nil {
+		return
+	}
+	
+	transaction.Status = "failed"
+	// Could add error details to transaction if needed
+	_ = m.saveTransaction(transaction)
+}
+
+// moveTransactionToCommitted moves a transaction file to the committed directory
+func (m *Manager) moveTransactionToCommitted(transactionID string) error {
+	srcPath := filepath.Join(m.transactionDir, fmt.Sprintf("transaction-%s.json", transactionID))
+	dstPath := filepath.Join(m.transactionDir, "committed", fmt.Sprintf("transaction-%s.json", transactionID))
+	
+	return os.Rename(srcPath, dstPath)
 }
