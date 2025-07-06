@@ -93,3 +93,4 @@ func (c *NetplanConfig) ValidateConfig() error {
 
 	return nil
 }
+

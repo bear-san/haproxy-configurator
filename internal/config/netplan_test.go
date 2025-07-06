@@ -108,7 +108,7 @@ func TestFindInterfaceForIP(t *testing.T) {
 	}
 
 	testCases := []struct {
-		ip           string
+		ip            string
 		expectedIface string
 		expectError   bool
 	}{
@@ -156,3 +156,4 @@ func TestFindInterfaceForIPParsesSubnets(t *testing.T) {
 		t.Errorf("Expected eth0, got %s", iface)
 	}
 }
+

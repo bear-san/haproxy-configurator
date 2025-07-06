@@ -45,7 +45,7 @@ func NewManager(cfg *config.NetplanConfig) *Manager {
 }
 
 // AddIPAddress adds an IP address to the appropriate interface
-func (m *Manager) AddIPAddress(ipAddr string, port int) error {
+func (m *Manager) AddIPAddress(ipAddr string, _ int) error {
 	if ipAddr == "" {
 		return fmt.Errorf("IP address cannot be empty")
 	}
@@ -314,3 +314,4 @@ func (m *Manager) getSubnetMaskForIP(ipAddr string) (string, error) {
 
 	return "/32", fmt.Errorf("no subnet found for IP %s, defaulting to /32", ipAddr)
 }
+

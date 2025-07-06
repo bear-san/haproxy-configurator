@@ -80,3 +80,4 @@ func TestNewManager(t *testing.T) {
 		t.Error("Manager addresses map not initialized")
 	}
 }
+
