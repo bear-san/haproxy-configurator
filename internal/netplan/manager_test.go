@@ -1,6 +1,9 @@
 package netplan
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/bear-san/haproxy-configurator/internal/config"
@@ -79,6 +82,245 @@ func TestNewManager(t *testing.T) {
 	}
 	if manager.addresses == nil {
 		t.Error("Manager addresses map not initialized")
+	}
+}
+
+func TestAddIPAddressWithoutNetplanCommand(t *testing.T) {
+	// Skip this test if running in CI or environments without netplan
+	if _, err := os.Stat("/usr/sbin/netplan"); os.IsNotExist(err) {
+		t.Skip("Skipping test: netplan command not available")
+	}
+
+	// Create temporary directory for test config
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, "test-netplan.yaml")
+
+	cfg := &config.NetplanConfig{
+		Netplan: config.NetplanSettings{
+			InterfaceMappings: []config.InterfaceMapping{
+				{
+					Interface: "eth0",
+					Subnets:   []string{"192.168.1.0/24"},
+				},
+			},
+			ConfigPath:    configPath,
+			BackupEnabled: false, // Disable backup for test
+		},
+	}
+
+	manager := NewManager(cfg)
+
+	// Test adding IP address
+	err := manager.AddIPAddress("192.168.1.100", 80)
+	if err != nil {
+		t.Errorf("AddIPAddress failed: %v", err)
+	}
+
+	// Verify IP is tracked
+	tracked := manager.GetTrackedAddresses()
+	if len(tracked) != 1 {
+		t.Errorf("Expected 1 tracked address, got %d", len(tracked))
+	}
+	if tracked["192.168.1.100"] != "eth0" {
+		t.Errorf("Expected IP 192.168.1.100 to be tracked on eth0, got %s", tracked["192.168.1.100"])
+	}
+
+	// Verify config file was created
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		t.Error("Netplan config file was not created")
+	}
+
+	// Test adding duplicate IP (should not error)
+	err = manager.AddIPAddress("192.168.1.100", 443)
+	if err != nil {
+		t.Errorf("Adding duplicate IP should not error: %v", err)
+	}
+
+	// Test adding IP from unknown subnet
+	err = manager.AddIPAddress("203.0.113.1", 80)
+	if err == nil {
+		t.Error("Expected error for IP in unknown subnet")
+	}
+}
+
+func TestRemoveIPAddressWithoutNetplanCommand(t *testing.T) {
+	// Skip this test if running in CI or environments without netplan
+	if _, err := os.Stat("/usr/sbin/netplan"); os.IsNotExist(err) {
+		t.Skip("Skipping test: netplan command not available")
+	}
+
+	// Create temporary directory for test config
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, "test-netplan.yaml")
+
+	cfg := &config.NetplanConfig{
+		Netplan: config.NetplanSettings{
+			InterfaceMappings: []config.InterfaceMapping{
+				{
+					Interface: "eth0",
+					Subnets:   []string{"192.168.1.0/24"},
+				},
+			},
+			ConfigPath:    configPath,
+			BackupEnabled: false, // Disable backup for test
+		},
+	}
+
+	manager := NewManager(cfg)
+
+	// First add an IP
+	err := manager.AddIPAddress("192.168.1.100", 80)
+	if err != nil {
+		t.Fatalf("AddIPAddress failed: %v", err)
+	}
+
+	// Verify it's tracked
+	tracked := manager.GetTrackedAddresses()
+	if len(tracked) != 1 {
+		t.Fatalf("Expected 1 tracked address, got %d", len(tracked))
+	}
+
+	// Now remove it
+	err = manager.RemoveIPAddress("192.168.1.100")
+	if err != nil {
+		t.Errorf("RemoveIPAddress failed: %v", err)
+	}
+
+	// Verify it's no longer tracked
+	tracked = manager.GetTrackedAddresses()
+	if len(tracked) != 0 {
+		t.Errorf("Expected 0 tracked addresses after removal, got %d", len(tracked))
+	}
+
+	// Test removing non-existent IP
+	err = manager.RemoveIPAddress("192.168.1.200")
+	if err == nil {
+		t.Error("Expected error when removing non-existent IP")
+	}
+}
+
+func TestAddIPAddressValidation(t *testing.T) {
+	cfg := &config.NetplanConfig{
+		Netplan: config.NetplanSettings{
+			InterfaceMappings: []config.InterfaceMapping{
+				{
+					Interface: "eth0",
+					Subnets:   []string{"192.168.1.0/24"},
+				},
+			},
+			ConfigPath: "/tmp/test-netplan.yaml",
+		},
+	}
+
+	manager := NewManager(cfg)
+
+	// Test empty IP address
+	err := manager.AddIPAddress("", 80)
+	if err == nil {
+		t.Error("Expected error for empty IP address")
+	}
+
+	// Test invalid IP address format
+	err = manager.AddIPAddress("invalid-ip", 80)
+	if err == nil {
+		t.Error("Expected error for invalid IP address format")
+	}
+}
+
+func TestTrackingMechanism(t *testing.T) {
+	cfg := &config.NetplanConfig{
+		Netplan: config.NetplanSettings{
+			InterfaceMappings: []config.InterfaceMapping{
+				{
+					Interface: "eth0",
+					Subnets:   []string{"192.168.1.0/24"},
+				},
+				{
+					Interface: "eth1",
+					Subnets:   []string{"10.0.0.0/8"},
+				},
+			},
+		},
+	}
+
+	manager := NewManager(cfg)
+
+	// Test tracking state is initially empty
+	tracked := manager.GetTrackedAddresses()
+	if len(tracked) != 0 {
+		t.Errorf("Expected empty tracking map, got %d entries", len(tracked))
+	}
+
+	// Manually add to tracking (simulating successful add)
+	manager.addresses["192.168.1.100"] = "eth0"
+	manager.addresses["10.0.0.50"] = "eth1"
+
+	// Verify tracking
+	tracked = manager.GetTrackedAddresses()
+	if len(tracked) != 2 {
+		t.Errorf("Expected 2 tracked addresses, got %d", len(tracked))
+	}
+	if tracked["192.168.1.100"] != "eth0" {
+		t.Errorf("Expected 192.168.1.100 on eth0, got %s", tracked["192.168.1.100"])
+	}
+	if tracked["10.0.0.50"] != "eth1" {
+		t.Errorf("Expected 10.0.0.50 on eth1, got %s", tracked["10.0.0.50"])
+	}
+}
+
+func TestBackupFileCreation(t *testing.T) {
+	// This test verifies the backup logic without executing netplan commands
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, "test-netplan.yaml")
+
+	// Create an existing config file
+	existingContent := []byte("network:\n  version: 2\n")
+	if err := os.WriteFile(configPath, existingContent, 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	cfg := &config.NetplanConfig{
+		Netplan: config.NetplanSettings{
+			InterfaceMappings: []config.InterfaceMapping{
+				{
+					Interface: "eth0",
+					Subnets:   []string{"192.168.1.0/24"},
+				},
+			},
+			ConfigPath:    configPath,
+			BackupEnabled: true,
+		},
+	}
+
+	manager := NewManager(cfg)
+
+	// Call createBackup directly
+	err := manager.createBackup(configPath)
+	if err != nil {
+		t.Errorf("createBackup failed: %v", err)
+	}
+
+	// Check if backup file was created
+	files, err := os.ReadDir(tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to read directory: %v", err)
+	}
+
+	backupFound := false
+	for _, file := range files {
+		if strings.Contains(file.Name(), "backup") && strings.Contains(file.Name(), "test-netplan.yaml") {
+			backupFound = true
+			break
+		}
+	}
+
+	if !backupFound {
+		// List all files for debugging
+		t.Logf("Files in directory:")
+		for _, file := range files {
+			t.Logf("  %s", file.Name())
+		}
+		t.Error("Backup file was not created")
 	}
 }
 
