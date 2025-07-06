@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/bear-san/haproxy-configurator/internal/config"
+	"github.com/bear-san/haproxy-configurator/internal/logger"
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
 
@@ -65,6 +67,11 @@ func NewManager(cfg *config.NetplanConfig) *Manager {
 		transactionDir = "/tmp/haproxy-netplan-transactions"
 	}
 	
+	logger.GetLogger().Info("Initializing Netplan manager",
+		zap.String("transaction_dir", transactionDir),
+		zap.String("netplan_config_path", cfg.Netplan.ConfigPath),
+		zap.Bool("backup_enabled", cfg.Netplan.BackupEnabled))
+	
 	// Ensure transaction directory exists
 	_ = os.MkdirAll(transactionDir, 0755)
 	_ = os.MkdirAll(filepath.Join(transactionDir, "committed"), 0755)
@@ -81,6 +88,9 @@ func (m *Manager) AddIPAddress(ipAddr string, _ int) error {
 	if ipAddr == "" {
 		return fmt.Errorf("IP address cannot be empty")
 	}
+
+	logger.GetLogger().Debug("Adding IP address to interface",
+		zap.String("ip_address", ipAddr))
 
 	// Find the appropriate interface for this IP
 	interfaceName, err := m.config.FindInterfaceForIP(ipAddr)
@@ -105,7 +115,9 @@ func (m *Manager) AddIPAddress(ipAddr string, _ int) error {
 	subnetMask, err := m.getSubnetMaskForIP(ipAddr)
 	if err != nil {
 		// Log warning but continue with /32 default
-		fmt.Printf("Warning: failed to determine subnet mask for IP %s: %v, defaulting to /32\n", ipAddr, err)
+		logger.GetLogger().Warn("Failed to determine subnet mask, defaulting to /32",
+			zap.String("ip_address", ipAddr),
+			zap.Error(err))
 		subnetMask = "/32"
 	}
 
@@ -352,6 +364,11 @@ func (m *Manager) AddIPAddressToTransaction(transactionID, ipAddr string, port i
 		return fmt.Errorf("IP address cannot be empty")
 	}
 
+	logger.GetLogger().Debug("Adding IP address to transaction",
+		zap.String("transaction_id", transactionID),
+		zap.String("ip_address", ipAddr),
+		zap.Int("port", port))
+
 	// Find the appropriate interface for this IP
 	interfaceName, err := m.config.FindInterfaceForIP(ipAddr)
 	if err != nil {
@@ -361,7 +378,9 @@ func (m *Manager) AddIPAddressToTransaction(transactionID, ipAddr string, port i
 	// Get the appropriate subnet mask for this IP
 	subnetMask, err := m.getSubnetMaskForIP(ipAddr)
 	if err != nil {
-		fmt.Printf("Warning: failed to determine subnet mask for IP %s: %v, defaulting to /32\n", ipAddr, err)
+		logger.GetLogger().Warn("Failed to determine subnet mask, defaulting to /32",
+			zap.String("ip_address", ipAddr),
+			zap.Error(err))
 		subnetMask = "/32"
 	}
 
@@ -381,6 +400,10 @@ func (m *Manager) RemoveIPAddressFromTransaction(transactionID, ipAddr string) e
 		return fmt.Errorf("IP address cannot be empty")
 	}
 
+	logger.GetLogger().Debug("Removing IP address from transaction",
+		zap.String("transaction_id", transactionID),
+		zap.String("ip_address", ipAddr))
+
 	// Find the appropriate interface for this IP
 	interfaceName, err := m.config.FindInterfaceForIP(ipAddr)
 	if err != nil {
@@ -399,6 +422,9 @@ func (m *Manager) RemoveIPAddressFromTransaction(transactionID, ipAddr string) e
 func (m *Manager) CommitTransaction(transactionID string) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
+
+	logger.GetLogger().Info("Committing Netplan transaction",
+		zap.String("transaction_id", transactionID))
 
 	// Load the transaction
 	transaction, err := m.loadTransaction(transactionID)
@@ -420,6 +446,10 @@ func (m *Manager) CommitTransaction(transactionID string) error {
 	for _, change := range transaction.Changes {
 		if err := m.applyChange(netplanConfig, change); err != nil {
 			// Mark transaction as failed
+			logger.GetLogger().Error("Failed to apply transaction change",
+				zap.String("transaction_id", transactionID),
+				zap.Any("change", change),
+				zap.Error(err))
 			m.markTransactionFailed(transactionID, err)
 			return fmt.Errorf("failed to apply change %+v: %w", change, err)
 		}
@@ -451,6 +481,10 @@ func (m *Manager) CommitTransaction(transactionID string) error {
 	if err := m.moveTransactionToCommitted(transactionID); err != nil {
 		return fmt.Errorf("failed to move transaction to committed: %w", err)
 	}
+
+	logger.GetLogger().Info("Successfully committed Netplan transaction",
+		zap.String("transaction_id", transactionID),
+		zap.Int("changes_applied", len(transaction.Changes)))
 
 	return nil
 }

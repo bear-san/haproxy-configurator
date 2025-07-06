@@ -8,9 +8,17 @@ import (
 	"testing"
 
 	"github.com/bear-san/haproxy-configurator/internal/config"
+	"github.com/bear-san/haproxy-configurator/internal/logger"
 )
 
+// setupTest initializes the logger for tests
+func setupTest() {
+	_ = logger.InitLogger(true)
+}
+
 func TestGetSubnetMaskForIP(t *testing.T) {
+	setupTest()
+	
 	cfg := &config.NetplanConfig{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
@@ -62,6 +70,8 @@ func TestGetSubnetMaskForIP(t *testing.T) {
 }
 
 func TestNewManager(t *testing.T) {
+	setupTest()
+	
 	cfg := &config.NetplanConfig{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
@@ -87,6 +97,7 @@ func TestNewManager(t *testing.T) {
 }
 
 func TestAddIPAddressWithoutNetplanCommand(t *testing.T) {
+	setupTest()
 	// Skip this test if running in CI or environments without netplan
 	if _, err := os.Stat("/usr/sbin/netplan"); os.IsNotExist(err) {
 		t.Skip("Skipping test: netplan command not available")
@@ -145,6 +156,7 @@ func TestAddIPAddressWithoutNetplanCommand(t *testing.T) {
 }
 
 func TestRemoveIPAddressWithoutNetplanCommand(t *testing.T) {
+	setupTest()
 	// Skip this test if running in CI or environments without netplan
 	if _, err := os.Stat("/usr/sbin/netplan"); os.IsNotExist(err) {
 		t.Skip("Skipping test: netplan command not available")
@@ -201,6 +213,7 @@ func TestRemoveIPAddressWithoutNetplanCommand(t *testing.T) {
 }
 
 func TestAddIPAddressValidation(t *testing.T) {
+	setupTest()
 	cfg := &config.NetplanConfig{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
@@ -229,6 +242,7 @@ func TestAddIPAddressValidation(t *testing.T) {
 }
 
 func TestTrackingMechanism(t *testing.T) {
+	setupTest()
 	cfg := &config.NetplanConfig{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
@@ -270,6 +284,7 @@ func TestTrackingMechanism(t *testing.T) {
 }
 
 func TestBackupFileCreation(t *testing.T) {
+	setupTest()
 	// This test verifies the backup logic without executing netplan commands
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "test-netplan.yaml")
@@ -326,6 +341,7 @@ func TestBackupFileCreation(t *testing.T) {
 }
 
 func TestTransactionBasicFlow(t *testing.T) {
+	setupTest()
 	cfg := &config.NetplanConfig{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
@@ -377,6 +393,7 @@ func TestTransactionBasicFlow(t *testing.T) {
 }
 
 func TestTransactionCommit(t *testing.T) {
+	setupTest()
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "test-netplan.yaml")
 

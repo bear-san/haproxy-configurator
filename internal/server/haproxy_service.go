@@ -7,9 +7,11 @@ import (
 	"os"
 
 	"github.com/bear-san/haproxy-configurator/internal/config"
+	"github.com/bear-san/haproxy-configurator/internal/logger"
 	"github.com/bear-san/haproxy-configurator/internal/netplan"
 	pb "github.com/bear-san/haproxy-configurator/pkg/haproxy/v1"
 	v3 "github.com/bear-san/haproxy-go/dataplane/v3"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -39,6 +41,10 @@ func NewHAProxyManagerServer() *HAProxyManagerServer {
 	if password == "" {
 		password = "admin"
 	}
+
+	logger.GetLogger().Info("Initializing HAProxy manager server",
+		zap.String("base_url", baseURL),
+		zap.String("username", username))
 
 	// Create base64 encoded credentials
 	credential := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password)))
