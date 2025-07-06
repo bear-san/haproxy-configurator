@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package haproxy.v1;
 
-option go_package = "github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1";
+option go_package = "github.com/bear-san/haproxy-configurator/pkg/haproxy/v1";
 
 // Bind represents a HAProxy bind configuration
 message Bind {

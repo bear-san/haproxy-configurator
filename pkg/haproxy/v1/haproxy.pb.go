@@ -57,7 +57,7 @@ const file_haproxy_proto_rawDesc = "" +
 	"\tGetServer\x12\x1c.haproxy.v1.GetServerRequest\x1a\x1d.haproxy.v1.GetServerResponse\x12N\n" +
 	"\vListServers\x12\x1e.haproxy.v1.ListServersRequest\x1a\x1f.haproxy.v1.ListServersResponse\x12Q\n" +
 	"\fUpdateServer\x12\x1f.haproxy.v1.UpdateServerRequest\x1a .haproxy.v1.UpdateServerResponse\x12Q\n" +
-	"\fDeleteServer\x12\x1f.haproxy.v1.DeleteServerRequest\x1a .haproxy.v1.DeleteServerResponseB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
+	"\fDeleteServer\x12\x1f.haproxy.v1.DeleteServerRequest\x1a .haproxy.v1.DeleteServerResponseB9Z7github.com/bear-san/haproxy-configurator/pkg/haproxy/v1b\x06proto3"
 
 var file_haproxy_proto_goTypes = []any{
 	(*GetVersionRequest)(nil),         // 0: haproxy.v1.GetVersionRequest

@@ -623,7 +623,7 @@ const file_frontend_proto_rawDesc = "" +
 	"\x15DeleteFrontendRequest\x12%\n" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\"\x18\n" +
-	"\x16DeleteFrontendResponseB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
+	"\x16DeleteFrontendResponseB9Z7github.com/bear-san/haproxy-configurator/pkg/haproxy/v1b\x06proto3"
 
 var (
 	file_frontend_proto_rawDescOnce sync.Once

@@ -4,7 +4,7 @@ package haproxy.v1;
 
 import "common.proto";
 
-option go_package = "github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1";
+option go_package = "github.com/bear-san/haproxy-configurator/pkg/haproxy/v1";
 
 // Frontend represents a HAProxy frontend configuration
 message Frontend {

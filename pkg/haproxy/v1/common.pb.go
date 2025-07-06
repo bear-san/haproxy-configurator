@@ -80,7 +80,7 @@ const file_common_proto_rawDesc = "" +
 	"\tProxyMode\x12\x1a\n" +
 	"\x16PROXY_MODE_UNSPECIFIED\x10\x00\x12\x12\n" +
 	"\x0ePROXY_MODE_TCP\x10\x01\x12\x13\n" +
-	"\x0fPROXY_MODE_HTTP\x10\x02B<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
+	"\x0fPROXY_MODE_HTTP\x10\x02B9Z7github.com/bear-san/haproxy-configurator/pkg/haproxy/v1b\x06proto3"
 
 var (
 	file_common_proto_rawDescOnce sync.Once

@@ -1,4 +1,4 @@
-# HAProxy Network Manager
+# HAProxy Configurator
 
 A gRPC-based HAProxy configuration management service with Protocol Buffers.
 
@@ -16,13 +16,13 @@ A gRPC-based HAProxy configuration management service with Protocol Buffers.
 
 ```bash
 # Build the server
-go build -o bin/haproxy-server ./cmd/server
+go build -o bin/haproxy-configurator ./cmd/server
 
 # Run the server (default port 50051)
-./bin/haproxy-server
+./bin/haproxy-configurator
 
 # Run on custom port
-./bin/haproxy-server -port 8080
+./bin/haproxy-configurator -port 8080
 ```
 
 ### Protocol Buffer Generation
@@ -47,6 +47,26 @@ The service provides a unified `HAProxyManagerService` with operations for:
 
 ## Development
 
+### Local Development Environment
+
+Use the development environment in the `dev/` directory for local testing:
+
+```bash
+# Start development environment with HAProxy
+cd dev
+docker-compose up --build
+
+# Or from project root
+docker-compose -f dev/docker-compose.yml up --build
+```
+
+This provides:
+- HAProxy Configurator gRPC server on `localhost:50051`
+- HAProxy with Data Plane API on `localhost:5555`
+- HAProxy stats page on `http://localhost:8404/stats`
+
+See [dev/README.md](dev/README.md) for more details.
+
 ### Testing with grpcurl
 
 ```bash
@@ -67,16 +87,38 @@ grpcurl -plaintext localhost:50051 haproxy.v1.HAProxyManagerService/GetVersion
 ├── pkg/haproxy/v1/        # Generated Go protobuf code
 ├── internal/server/       # gRPC server implementation
 ├── cmd/server/           # Server main entry point
+├── dev/                  # Development environment
+│   ├── Dockerfile.dev    # Development Dockerfile
+│   ├── docker-compose.yml # Local development setup
+│   ├── haproxy.cfg       # HAProxy test configuration
+│   └── README.md         # Development environment guide
+├── Dockerfile            # Production Dockerfile (for GoReleaser)
+├── .goreleaser.yml       # GoReleaser configuration
 ├── buf.yaml              # Buf configuration
 └── buf.gen.yaml          # Buf code generation config
 ```
 
 ## Current Status
 
-This is a foundational implementation with:
-- ✅ Complete proto definitions
+This implementation provides:
+- ✅ Complete proto definitions with enums for type safety
 - ✅ Generated Go protobuf code
-- ✅ gRPC server scaffold with all method stubs
-- ⚠️ Methods return "Unimplemented" - ready for HAProxy integration
+- ✅ Full gRPC server implementation with HAProxy Data Plane API integration
+- ✅ Transaction-based configuration management
+- ✅ Docker multi-architecture builds (AMD64/ARM64)
+- ✅ GoReleaser CI/CD pipeline
+- ✅ Comprehensive error handling and type conversion
+- ✅ Development environment with docker-compose
 
-Next steps: Implement actual HAProxy configuration management logic in the service methods.
+## Environment Variables
+
+- `HAPROXY_API_URL`: HAProxy Data Plane API URL (default: `http://localhost:5555`)
+- `HAPROXY_API_USERNAME`: API username (default: `admin`)
+- `HAPROXY_API_PASSWORD`: API password (default: `admin`)
+
+## Release
+
+Releases are automated via GitHub Actions:
+- Tag a version: `git tag v1.0.0 && git push origin v1.0.0`
+- Automatically builds binaries and Docker images for multiple architectures
+- Published to GitHub Releases and Docker registries

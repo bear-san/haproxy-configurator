@@ -1,0 +1,103 @@
+# .goreleaser.yml
+version: 2
+
+project_name: haproxy-configurator
+
+# Build configuration
+builds:
+  - id: haproxy-configurator
+    main: ./cmd/server/main.go
+    binary: haproxy-configurator
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+# Docker configuration
+dockers:
+  - image_templates:
+      - "bear-san/haproxy-configurator:{{ .Version }}-amd64"
+      - "bear-san/haproxy-configurator:latest-amd64"
+    dockerfile: Dockerfile
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+    goarch: amd64
+    
+  - image_templates:
+      - "bear-san/haproxy-configurator:{{ .Version }}-arm64"
+      - "bear-san/haproxy-configurator:latest-arm64"
+    dockerfile: Dockerfile
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+    goarch: arm64
+
+# Docker manifest for multi-arch images
+docker_manifests:
+  - name_template: "bear-san/haproxy-configurator:{{ .Version }}"
+    image_templates:
+      - "bear-san/haproxy-configurator:{{ .Version }}-amd64"
+      - "bear-san/haproxy-configurator:{{ .Version }}-arm64"
+      
+  - name_template: "bear-san/haproxy-configurator:latest"
+    image_templates:
+      - "bear-san/haproxy-configurator:latest-amd64"
+      - "bear-san/haproxy-configurator:latest-arm64"
+
+# Archive configuration (v2 format)
+archives:
+  - id: haproxy-configurator
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    builds:
+      - haproxy-configurator
+    files:
+      - README.md
+      - LICENSE*
+
+# Checksum
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+
+# Changelog
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+
+# Release configuration
+release:
+  github:
+    owner: bear-san
+    name: haproxy-configurator
+  draft: false
+  prerelease: auto
+  name_template: "Release {{ .Version }}"
