@@ -1,4 +1,4 @@
-module github.com/bear-san/haproxy-network-manager
+module github.com/bear-san/haproxy-configurator
 
 go 1.24.3
 

@@ -641,7 +641,7 @@ const file_server_proto_rawDesc = "" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\x12!\n" +
 	"\fbackend_name\x18\x02 \x01(\tR\vbackendName\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\"\x16\n" +
-	"\x14DeleteServerResponseB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
+	"\x14DeleteServerResponseB9Z7github.com/bear-san/haproxy-configurator/pkg/haproxy/v1b\x06proto3"
 
 var (
 	file_server_proto_rawDescOnce sync.Once

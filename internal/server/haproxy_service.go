@@ -7,7 +7,7 @@ import (
 	"os"
 
 	v3 "github.com/bear-san/haproxy-go/dataplane/v3"
-	pb "github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1"
+	pb "github.com/bear-san/haproxy-configurator/pkg/haproxy/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

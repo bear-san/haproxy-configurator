@@ -543,7 +543,7 @@ const file_transaction_proto_rawDesc = "" +
 	"\x17CloseTransactionRequest\x12%\n" +
 	"\x0etransaction_id\x18\x01 \x01(\tR\rtransactionId\"4\n" +
 	"\x18CloseTransactionResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessageB<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
+	"\amessage\x18\x01 \x01(\tR\amessageB9Z7github.com/bear-san/haproxy-configurator/pkg/haproxy/v1b\x06proto3"
 
 var (
 	file_transaction_proto_rawDescOnce sync.Once

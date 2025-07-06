@@ -5,8 +5,8 @@ plugins:
   - remote: buf.build/protocolbuffers/go
     out: .
     opt:
-      - module=github.com/bear-san/haproxy-network-manager
+      - module=github.com/bear-san/haproxy-configurator
   - remote: buf.build/grpc/go
     out: .
     opt:
-      - module=github.com/bear-san/haproxy-network-manager
+      - module=github.com/bear-san/haproxy-configurator

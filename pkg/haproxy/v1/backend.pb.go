@@ -705,7 +705,7 @@ const file_backend_proto_rawDesc = "" +
 	"\x17BALANCE_ALGORITHM_FIRST\x10\x01\x12\x1a\n" +
 	"\x16BALANCE_ALGORITHM_HASH\x10\x02\x12\x1c\n" +
 	"\x18BALANCE_ALGORITHM_RANDOM\x10\x03\x12 \n" +
-	"\x1cBALANCE_ALGORITHM_ROUNDROBIN\x10\x04B<Z:github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1b\x06proto3"
+	"\x1cBALANCE_ALGORITHM_ROUNDROBIN\x10\x04B9Z7github.com/bear-san/haproxy-configurator/pkg/haproxy/v1b\x06proto3"
 
 var (
 	file_backend_proto_rawDescOnce sync.Once

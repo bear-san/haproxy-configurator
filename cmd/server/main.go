@@ -6,8 +6,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/bear-san/haproxy-network-manager/internal/server"
-	pb "github.com/bear-san/haproxy-network-manager/pkg/haproxy/v1"
+	"github.com/bear-san/haproxy-configurator/internal/server"
+	pb "github.com/bear-san/haproxy-configurator/pkg/haproxy/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -35,7 +35,7 @@ func main() {
 	// Enable reflection for development/debugging
 	reflection.Register(s)
 
-	log.Printf("HAProxy Network Manager gRPC server listening on port %d", *port)
+	log.Printf("HAProxy Configurator gRPC server listening on port %d", *port)
 	log.Printf("Use grpcurl or other gRPC clients to interact with the server")
 	log.Printf("Example: grpcurl -plaintext localhost:%d list", *port)
 
