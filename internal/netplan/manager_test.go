@@ -72,6 +72,7 @@ func TestNewManager(t *testing.T) {
 	manager := NewManager(cfg)
 	if manager == nil {
 		t.Error("NewManager returned nil")
+		return
 	}
 	if manager.config != cfg {
 		t.Error("Manager config not set correctly")
