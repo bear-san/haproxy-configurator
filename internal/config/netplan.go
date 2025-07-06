@@ -15,9 +15,10 @@ type NetplanConfig struct {
 
 // NetplanSettings contains the Netplan-specific settings
 type NetplanSettings struct {
-	InterfaceMappings []InterfaceMapping `yaml:"interface_mappings"`
-	ConfigPath        string             `yaml:"netplan_config_path"`
-	BackupEnabled     bool               `yaml:"backup_enabled"`
+	InterfaceMappings  []InterfaceMapping `yaml:"interface_mappings"`
+	ConfigPath         string             `yaml:"netplan_config_path"`
+	BackupEnabled      bool               `yaml:"backup_enabled"`
+	TransactionDir     string             `yaml:"transaction_dir,omitempty"`
 }
 
 // InterfaceMapping defines which subnets can be assigned to which interface
@@ -75,6 +76,10 @@ func (c *NetplanConfig) ValidateConfig() error {
 
 	if c.Netplan.ConfigPath == "" {
 		c.Netplan.ConfigPath = "/etc/netplan/99-haproxy-configurator.yaml"
+	}
+
+	if c.Netplan.TransactionDir == "" {
+		c.Netplan.TransactionDir = "/tmp/haproxy-netplan-transactions"
 	}
 
 	for i, mapping := range c.Netplan.InterfaceMappings {

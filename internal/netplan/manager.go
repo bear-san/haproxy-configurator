@@ -59,7 +59,12 @@ type NetplanInterface struct {
 
 // NewManager creates a new Netplan manager
 func NewManager(cfg *config.NetplanConfig) *Manager {
-	transactionDir := "/tmp/haproxy-netplan-transactions"
+	// Use configured transaction directory or default
+	transactionDir := cfg.Netplan.TransactionDir
+	if transactionDir == "" {
+		transactionDir = "/tmp/haproxy-netplan-transactions"
+	}
+	
 	// Ensure transaction directory exists
 	_ = os.MkdirAll(transactionDir, 0755)
 	_ = os.MkdirAll(filepath.Join(transactionDir, "committed"), 0755)

@@ -28,6 +28,10 @@ netplan:
   
   # Enable backup of existing Netplan configuration before modifications
   backup_enabled: true
+  
+  # Directory for storing transaction files (optional)
+  # If not specified, defaults to /tmp/haproxy-netplan-transactions
+  transaction_dir: "/var/lib/haproxy-configurator/transactions"
 
 # Example usage:
 # 1. When a Bind is created with address "192.168.1.100", it will be assigned to eth0
