@@ -1,0 +1,36 @@
+# HAProxy Configurator - Netplan Integration Configuration
+# This file defines how IP addresses from HAProxy Bind configurations
+# should be mapped to network interfaces via Netplan
+
+netplan:
+  # Interface mappings define which subnets can be assigned to which network interfaces
+  interface_mappings:
+    # Primary interface for public traffic
+    - interface: "eth0"
+      subnets:
+        - "192.168.1.0/24"    # Local network
+        - "10.0.0.0/24"       # Internal network
+    
+    # Secondary interface for internal traffic
+    - interface: "eth1"
+      subnets:
+        - "172.16.0.0/16"     # Private network range
+        - "10.1.0.0/24"       # Management network
+    
+    # Loopback interface for virtual IPs
+    - interface: "lo"
+      subnets:
+        - "127.0.0.0/8"       # Loopback range
+  
+  # Path where HAProxy Configurator will manage Netplan configuration
+  # This file will be created and managed automatically
+  netplan_config_path: "/etc/netplan/99-haproxy-configurator.yaml"
+  
+  # Enable backup of existing Netplan configuration before modifications
+  backup_enabled: true
+
+# Example usage:
+# 1. When a Bind is created with address "192.168.1.100", it will be assigned to eth0
+# 2. When a Bind is created with address "172.16.10.50", it will be assigned to eth1
+# 3. The IP addresses will be added to the Netplan configuration automatically
+# 4. Netplan apply will be executed after transaction commit
