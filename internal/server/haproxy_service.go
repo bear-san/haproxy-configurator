@@ -7,6 +7,8 @@ import (
 	"os"
 
 	v3 "github.com/bear-san/haproxy-go/dataplane/v3"
+	"github.com/bear-san/haproxy-configurator/internal/config"
+	"github.com/bear-san/haproxy-configurator/internal/netplan"
 	pb "github.com/bear-san/haproxy-configurator/pkg/haproxy/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,7 +17,9 @@ import (
 // HAProxyManagerServer implements the HAProxyManagerServiceServer interface
 type HAProxyManagerServer struct {
 	pb.UnimplementedHAProxyManagerServiceServer
-	client v3.Client
+	client        v3.Client
+	netplanMgr    *netplan.Manager
+	netplanConfig *config.NetplanConfig
 }
 
 // NewHAProxyManagerServer creates a new HAProxyManagerServer instance
@@ -44,6 +48,8 @@ func NewHAProxyManagerServer() *HAProxyManagerServer {
 			BaseUrl:    baseURL,
 			Credential: credential,
 		},
+		netplanMgr:    nil, // Will be initialized by SetNetplanConfig if needed
+		netplanConfig: nil, // Will be initialized by SetNetplanConfig if needed
 	}
 }
 
@@ -93,14 +99,8 @@ func (s *HAProxyManagerServer) CommitTransaction(_ context.Context, req *pb.Comm
 		return nil, status.Errorf(codes.InvalidArgument, "transaction ID is required")
 	}
 
-	transaction, err := s.client.CommitTransaction(req.TransactionId)
-	if err != nil {
-		return nil, handleHAProxyError(err)
-	}
-
-	return &pb.CommitTransactionResponse{
-		Transaction: convertTransactionToProto(transaction),
-	}, nil
+	// Use Netplan-aware transaction commit
+	return s.CommitTransactionWithNetplan(req)
 }
 
 // CloseTransaction closes a transaction without committing any changes
@@ -299,15 +299,8 @@ func (s *HAProxyManagerServer) CreateBind(_ context.Context, req *pb.CreateBindR
 		return nil, status.Errorf(codes.InvalidArgument, "bind is required")
 	}
 
-	bind := convertBindFromProto(req.Bind)
-	created, err := s.client.AddBind(req.FrontendName, req.TransactionId, *bind)
-	if err != nil {
-		return nil, handleHAProxyError(err)
-	}
-
-	return &pb.CreateBindResponse{
-		Bind: convertBindToProto(created),
-	}, nil
+	// Use Netplan-aware bind creation
+	return s.CreateBindWithNetplan(req)
 }
 
 // GetBind retrieves a specific bind configuration by name from a frontend
@@ -379,12 +372,8 @@ func (s *HAProxyManagerServer) DeleteBind(_ context.Context, req *pb.DeleteBindR
 		return nil, status.Errorf(codes.InvalidArgument, "bind name is required")
 	}
 
-	err := s.client.DeleteBind(req.Name, req.FrontendName, req.TransactionId)
-	if err != nil {
-		return nil, handleHAProxyError(err)
-	}
-
-	return &pb.DeleteBindResponse{}, nil
+	// Use Netplan-aware bind deletion
+	return s.DeleteBindWithNetplan(req)
 }
 
 // CreateServer creates a new server configuration in a backend
