@@ -32,7 +32,7 @@ func (s *HAProxyManagerServer) SetNetplanConfig(configPath string) error {
 	s.netplanConfig = cfg
 	s.netplanMgr = netplan.NewManager(cfg)
 
-	log.Printf("Netplan integration enabled with config: %s", configPath)
+	log.Printf("Netplan integration enabled with config: %q", configPath)
 	return nil
 }
 
