@@ -41,7 +41,9 @@ func init() {
 	rootCmd.Flags().BoolVarP(&development, "development", "d", false, "Enable development mode logging")
 
 	// Make config flag required
-	rootCmd.MarkFlagRequired("config")
+	if err := rootCmd.MarkFlagRequired("config"); err != nil {
+		panic(fmt.Sprintf("Failed to mark config flag as required: %v", err))
+	}
 }
 
 func main() {
