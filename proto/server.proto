@@ -7,7 +7,7 @@ option go_package = "github.com/bear-san/haproxy-configurator/pkg/haproxy/v1";
 // Server represents a HAProxy server configuration
 message Server {
   string id = 1;
-  string name = 2;
+  string name = 2; // Required: Unique identifier for the server
   string address = 3;
   int32 port = 4;
 }

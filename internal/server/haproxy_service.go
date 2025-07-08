@@ -124,6 +124,9 @@ func (s *HAProxyManagerServer) CreateBackend(_ context.Context, req *pb.CreateBa
 	if req.Backend == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "backend is required")
 	}
+	if req.Backend.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "backend name is required")
+	}
 
 	backend := convertBackendFromProto(req.Backend)
 	created, err := s.client.AddBackend(*backend, req.TransactionId)
@@ -208,6 +211,9 @@ func (s *HAProxyManagerServer) DeleteBackend(_ context.Context, req *pb.DeleteBa
 func (s *HAProxyManagerServer) CreateFrontend(_ context.Context, req *pb.CreateFrontendRequest) (*pb.CreateFrontendResponse, error) {
 	if req.Frontend == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "frontend is required")
+	}
+	if req.Frontend.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "frontend name is required")
 	}
 
 	frontend := convertFrontendFromProto(req.Frontend)
@@ -297,6 +303,9 @@ func (s *HAProxyManagerServer) CreateBind(_ context.Context, req *pb.CreateBindR
 	if req.Bind == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "bind is required")
 	}
+	if req.Bind.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "bind name is required")
+	}
 
 	// Use Netplan-aware bind creation
 	return s.CreateBindWithNetplan(req)
@@ -383,6 +392,9 @@ func (s *HAProxyManagerServer) CreateServer(_ context.Context, req *pb.CreateSer
 	}
 	if req.Server == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "server is required")
+	}
+	if req.Server.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "server name is required")
 	}
 
 	server := convertServerFromProto(req.Server)

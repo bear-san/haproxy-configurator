@@ -7,7 +7,7 @@ option go_package = "github.com/bear-san/haproxy-configurator/pkg/haproxy/v1";
 // Bind represents a HAProxy bind configuration
 message Bind {
   string id = 1;
-  string name = 2;
+  string name = 2; // Required: Unique identifier for the bind
   string address = 3;
   int32 port = 4;
   bool v4v6 = 5;

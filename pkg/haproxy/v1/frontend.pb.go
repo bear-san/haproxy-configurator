@@ -29,7 +29,7 @@ type Frontend struct {
 	Disabled       bool                   `protobuf:"varint,3,opt,name=disabled,proto3" json:"disabled,omitempty"`
 	Enabled        bool                   `protobuf:"varint,4,opt,name=enabled,proto3" json:"enabled,omitempty"`
 	Id             int32                  `protobuf:"varint,5,opt,name=id,proto3" json:"id,omitempty"`
-	Name           string                 `protobuf:"bytes,6,opt,name=name,proto3" json:"name,omitempty"`
+	Name           string                 `protobuf:"bytes,6,opt,name=name,proto3" json:"name,omitempty"` // Required: Unique identifier for the frontend
 	Mode           ProxyMode              `protobuf:"varint,7,opt,name=mode,proto3,enum=haproxy.v1.ProxyMode" json:"mode,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
