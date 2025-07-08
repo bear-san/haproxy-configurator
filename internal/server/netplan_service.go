@@ -1,41 +1,11 @@
 package server
 
 import (
-	"github.com/bear-san/haproxy-configurator/internal/config"
 	"github.com/bear-san/haproxy-configurator/internal/logger"
-	"github.com/bear-san/haproxy-configurator/internal/netplan"
 	pb "github.com/bear-san/haproxy-configurator/pkg/haproxy/v1"
 	"go.uber.org/zap"
 )
 
-// SetNetplanConfig initializes the Netplan configuration for the server
-func (s *HAProxyManagerServer) SetNetplanConfig(configPath string) error {
-	if configPath == "" {
-		// Netplan integration is disabled
-		s.netplanConfig = nil
-		s.netplanMgr = nil
-		return nil
-	}
-
-	// Load Netplan configuration
-	cfg, err := config.LoadNetplanConfig(configPath)
-	if err != nil {
-		return err
-	}
-
-	// Validate configuration
-	if err := cfg.ValidateConfig(); err != nil {
-		return err
-	}
-
-	// Initialize Netplan manager
-	s.netplanConfig = cfg
-	s.netplanMgr = netplan.NewManager(cfg)
-
-	logger.GetLogger().Info("Netplan integration enabled",
-		zap.String("config_path", configPath))
-	return nil
-}
 
 // CreateBindWithNetplan creates a bind configuration and manages IP address assignment
 func (s *HAProxyManagerServer) CreateBindWithNetplan(req *pb.CreateBindRequest) (*pb.CreateBindResponse, error) {
@@ -197,16 +167,16 @@ func (s *HAProxyManagerServer) CommitTransactionWithNetplan(req *pb.CommitTransa
 func (s *HAProxyManagerServer) GetNetplanStatus() map[string]interface{} {
 	status := make(map[string]interface{})
 
-	if s.netplanConfig == nil {
+	if s.config == nil || !s.config.HasNetplanIntegration() {
 		status["enabled"] = false
 		status["message"] = "Netplan integration disabled"
 		return status
 	}
 
 	status["enabled"] = true
-	status["config_path"] = s.netplanConfig.Netplan.ConfigPath
-	status["backup_enabled"] = s.netplanConfig.Netplan.BackupEnabled
-	status["interface_mappings"] = len(s.netplanConfig.Netplan.InterfaceMappings)
+	status["config_path"] = s.config.Netplan.ConfigPath
+	status["backup_enabled"] = s.config.Netplan.BackupEnabled
+	status["interface_mappings"] = len(s.config.Netplan.InterfaceMappings)
 
 	if s.netplanMgr != nil {
 		status["tracked_addresses"] = s.netplanMgr.GetTrackedAddresses()

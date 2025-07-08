@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/bear-san/haproxy-configurator/internal/config"
 	"github.com/bear-san/haproxy-configurator/internal/logger"
 	"github.com/bear-san/haproxy-configurator/internal/server"
 	pb "github.com/bear-san/haproxy-configurator/pkg/haproxy/v1"
@@ -16,9 +17,9 @@ import (
 )
 
 var (
-	port          int
-	netplanConfig string
-	development   bool
+	port        int
+	configFile  string
+	development bool
 )
 
 var rootCmd = &cobra.Command{
@@ -28,17 +29,19 @@ var rootCmd = &cobra.Command{
 through the HAProxy Data Plane API. It also supports optional Netplan integration
 for network configuration management.
 
-Environment Variables:
-  HAPROXY_API_URL         HAProxy Data Plane API URL (default: http://localhost:5555)
-  HAPROXY_API_USERNAME    API username for authentication (default: admin)
-  HAPROXY_API_PASSWORD    API password for authentication (default: admin)`,
+Configuration:
+  Use the -config flag to specify a unified configuration file containing
+  both HAProxy and Netplan settings.`,
 	Run: runServer,
 }
 
 func init() {
 	rootCmd.Flags().IntVarP(&port, "port", "p", 50051, "The server port")
-	rootCmd.Flags().StringVarP(&netplanConfig, "netplan-config", "n", "", "Path to the Netplan configuration file (optional)")
+	rootCmd.Flags().StringVarP(&configFile, "config", "c", "", "Path to the unified configuration file (required)")
 	rootCmd.Flags().BoolVarP(&development, "development", "d", false, "Enable development mode logging")
+
+	// Make config flag required
+	rootCmd.MarkFlagRequired("config")
 }
 
 func main() {
@@ -57,7 +60,7 @@ func runServer(cmd *cobra.Command, args []string) {
 
 	logger.GetLogger().Info("Starting HAProxy Configurator gRPC server",
 		zap.Int("port", port),
-		zap.String("netplan_config", netplanConfig),
+		zap.String("config_file", configFile),
 		zap.Bool("development_mode", development))
 
 	// Create a TCP listener on the specified port
@@ -71,21 +74,29 @@ func runServer(cmd *cobra.Command, args []string) {
 	// Create a new gRPC server
 	s := grpc.NewServer()
 
-	// Create and register the HAProxy manager service
-	haproxyService := server.NewHAProxyManagerServer()
-
-	// Configure Netplan integration if config file is provided
-	if netplanConfig != "" {
-		logger.GetLogger().Info("Initializing Netplan integration",
-			zap.String("config_file", netplanConfig))
-		if err := haproxyService.SetNetplanConfig(netplanConfig); err != nil {
-			logger.GetLogger().Fatal("Failed to initialize Netplan configuration",
-				zap.String("config_file", netplanConfig),
-				zap.Error(err))
-		}
-	} else {
-		logger.GetLogger().Info("Netplan integration disabled (no config file provided)")
+	// Load unified configuration file
+	cfg, err := config.LoadConfig(configFile)
+	if err != nil {
+		logger.GetLogger().Fatal("Failed to load configuration file",
+			zap.String("config_file", configFile),
+			zap.Error(err))
 	}
+
+	// Validate configuration
+	if err := cfg.ValidateConfig(); err != nil {
+		logger.GetLogger().Fatal("Invalid configuration",
+			zap.String("config_file", configFile),
+			zap.Error(err))
+	}
+
+	logger.GetLogger().Info("Loaded unified configuration",
+		zap.String("config_file", configFile),
+		zap.String("haproxy_url", cfg.HAProxy.APIURL),
+		zap.String("haproxy_username", cfg.HAProxy.Username),
+		zap.Bool("netplan_enabled", cfg.HasNetplanIntegration()))
+
+	// Create and register the HAProxy manager service
+	haproxyService := server.NewHAProxyManagerServerWithConfig(cfg)
 
 	pb.RegisterHAProxyManagerServiceServer(s, haproxyService)
 

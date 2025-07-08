@@ -19,13 +19,16 @@ A gRPC-based HAProxy configuration management service with Protocol Buffers.
 # Build the server
 go build -o bin/haproxy-configurator ./cmd/server
 
-# Run the server (default port 50051)
+# Run the server (default port 50051, using environment variables)
 ./bin/haproxy-configurator
 
 # Run on custom port
 ./bin/haproxy-configurator -port 8080
 
-# Run with Netplan integration
+# Run with unified configuration file (recommended)
+./bin/haproxy-configurator -config /path/to/config.yaml
+
+# Run with legacy Netplan integration only
 ./bin/haproxy-configurator -netplan-config /path/to/netplan-config.yaml
 ```
 
@@ -96,6 +99,50 @@ This implementation provides:
 - ✅ Comprehensive error handling and type conversion
 - ✅ Netplan integration for automatic IP address management
 - ✅ File-based transaction management for concurrent operations
+
+## Configuration
+
+The HAProxy Configurator supports two configuration methods:
+1. **Unified Configuration File** (recommended): Single YAML file containing both HAProxy and Netplan settings
+2. **Environment Variables + Separate Netplan Config** (legacy): Environment variables for HAProxy, separate file for Netplan
+
+### Unified Configuration File
+
+Create a unified configuration file (e.g., `config.yaml`):
+
+```yaml
+# HAProxy Data Plane API configuration
+haproxy:
+  api_url: "http://localhost:5555"
+  username: "admin"  
+  password: "admin"
+
+# Netplan integration configuration (optional)
+netplan:
+  interface_mappings:
+    - interface: "eth0"
+      subnets:
+        - "192.168.1.0/24"
+        - "10.0.0.0/24"
+    - interface: "vlan100@eth0"
+      subnets:
+        - "10.100.0.0/24"
+  netplan_config_path: "/etc/netplan/99-haproxy-configurator.yaml"
+  backup_enabled: true
+```
+
+Run the server:
+```bash
+./bin/haproxy-configurator -config /path/to/config.yaml
+```
+
+### Environment Variables Configuration
+
+The following environment variables are used when no configuration file is provided:
+
+- `HAPROXY_API_URL`: HAProxy Data Plane API URL (default: `http://localhost:5555`)
+- `HAPROXY_API_USERNAME`: API username (default: `admin`)
+- `HAPROXY_API_PASSWORD`: API password (default: `admin`)
 
 ## Netplan Integration
 
@@ -202,12 +249,6 @@ grpcurl -plaintext -d '{"transaction_id": "transaction-id"}' localhost:50051 hap
 - Verify that the specified network interfaces exist on the system
 - Ensure proper permissions for Netplan configuration files and commands
 - Use `netplan try` to test configurations manually if needed
-
-## Environment Variables
-
-- `HAPROXY_API_URL`: HAProxy Data Plane API URL (default: `http://localhost:5555`)
-- `HAPROXY_API_USERNAME`: API username (default: `admin`)
-- `HAPROXY_API_PASSWORD`: API password (default: `admin`)
 
 ## Release
 

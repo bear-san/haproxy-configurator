@@ -37,10 +37,10 @@ type Transaction struct {
 
 // Manager handles Netplan configuration operations
 type Manager struct {
-	config        *config.NetplanConfig
-	addresses     map[string]string // IP -> Interface mapping for tracking
+	config         *config.Config
+	addresses      map[string]string // IP -> Interface mapping for tracking
 	transactionDir string           // Directory for transaction files
-	mutex         sync.RWMutex      // Protects addresses map
+	mutex          sync.RWMutex      // Protects addresses map
 }
 
 // NetplanConfiguration represents the structure of a Netplan YAML file
@@ -78,8 +78,8 @@ type NetplanNameservers struct {
 	Addresses []string `yaml:"addresses,omitempty"`
 }
 
-// NewManager creates a new Netplan manager
-func NewManager(cfg *config.NetplanConfig) *Manager {
+// NewManagerWithConfig creates a new Netplan manager using unified config
+func NewManagerWithConfig(cfg *config.Config) *Manager {
 	// Use configured transaction directory or default
 	transactionDir := cfg.Netplan.TransactionDir
 	if transactionDir == "" {
@@ -123,7 +123,7 @@ func (m *Manager) AddIPAddress(ipAddr string, _ int) error {
 		zap.String("ip_address", ipAddr))
 
 	// Find the appropriate interface for this IP
-	interfaceName, err := m.config.FindInterfaceForIP(ipAddr)
+	interfaceName, err := m.findInterfaceForIP(ipAddr)
 	if err != nil {
 		return fmt.Errorf("failed to find interface for IP %s: %w", ipAddr, err)
 	}
@@ -462,7 +462,7 @@ func (m *Manager) AddIPAddressToTransaction(transactionID, ipAddr string, port i
 		zap.Int("port", port))
 
 	// Find the appropriate interface for this IP
-	interfaceName, err := m.config.FindInterfaceForIP(ipAddr)
+	interfaceName, err := m.findInterfaceForIP(ipAddr)
 	if err != nil {
 		return fmt.Errorf("failed to find interface for IP %s: %w", ipAddr, err)
 	}
@@ -497,7 +497,7 @@ func (m *Manager) RemoveIPAddressFromTransaction(transactionID, ipAddr string) e
 		zap.String("ip_address", ipAddr))
 
 	// Find the appropriate interface for this IP
-	interfaceName, err := m.config.FindInterfaceForIP(ipAddr)
+	interfaceName, err := m.findInterfaceForIP(ipAddr)
 	if err != nil {
 		return fmt.Errorf("failed to find interface for IP %s: %w", ipAddr, err)
 	}
@@ -767,4 +767,26 @@ func (m *Manager) moveTransactionToCommitted(transactionID string) error {
 	dstPath := filepath.Join(m.transactionDir, "committed", fmt.Sprintf("transaction-%s.json", transactionID))
 	
 	return os.Rename(srcPath, dstPath)
+}
+
+// findInterfaceForIP finds the appropriate interface for the given IP address
+func (m *Manager) findInterfaceForIP(ipAddr string) (string, error) {
+	ip := net.ParseIP(ipAddr)
+	if ip == nil {
+		return "", fmt.Errorf("invalid IP address: %s", ipAddr)
+	}
+
+	for _, mapping := range m.config.Netplan.InterfaceMappings {
+		for _, subnet := range mapping.Subnets {
+			_, cidr, err := net.ParseCIDR(subnet)
+			if err != nil {
+				continue // Skip invalid CIDR
+			}
+			if cidr.Contains(ip) {
+				return mapping.Interface, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("no interface mapping found for IP %s", ipAddr)
 }

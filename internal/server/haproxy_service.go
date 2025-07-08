@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"os"
 
 	"github.com/bear-san/haproxy-configurator/internal/config"
 	"github.com/bear-san/haproxy-configurator/internal/logger"
@@ -19,44 +18,38 @@ import (
 // HAProxyManagerServer implements the HAProxyManagerServiceServer interface
 type HAProxyManagerServer struct {
 	pb.UnimplementedHAProxyManagerServiceServer
-	client        v3.Client
-	netplanMgr    *netplan.Manager
-	netplanConfig *config.NetplanConfig
+	client     v3.Client
+	netplanMgr *netplan.Manager
+	config     *config.Config
 }
 
-// NewHAProxyManagerServer creates a new HAProxyManagerServer instance
-func NewHAProxyManagerServer() *HAProxyManagerServer {
-	// Get configuration from environment variables
-	baseURL := os.Getenv("HAPROXY_API_URL")
-	if baseURL == "" {
-		baseURL = "http://localhost:5555"
-	}
 
-	username := os.Getenv("HAPROXY_API_USERNAME")
-	if username == "" {
-		username = "admin"
-	}
-
-	password := os.Getenv("HAPROXY_API_PASSWORD")
-	if password == "" {
-		password = "admin"
-	}
-
-	logger.GetLogger().Info("Initializing HAProxy manager server",
-		zap.String("base_url", baseURL),
-		zap.String("username", username))
+// NewHAProxyManagerServerWithConfig creates a new HAProxyManagerServer instance using a configuration file
+func NewHAProxyManagerServerWithConfig(cfg *config.Config) *HAProxyManagerServer {
+	logger.GetLogger().Info("Initializing HAProxy manager server with config",
+		zap.String("base_url", cfg.HAProxy.APIURL),
+		zap.String("username", cfg.HAProxy.Username))
 
 	// Create base64 encoded credentials
-	credential := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password)))
+	credential := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", cfg.HAProxy.Username, cfg.HAProxy.Password)))
 
-	return &HAProxyManagerServer{
+	server := &HAProxyManagerServer{
 		client: v3.Client{
-			BaseUrl:    baseURL,
+			BaseUrl:    cfg.HAProxy.APIURL,
 			Credential: credential,
 		},
-		netplanMgr:    nil, // Will be initialized by SetNetplanConfig if needed
-		netplanConfig: nil, // Will be initialized by SetNetplanConfig if needed
+		config: cfg,
 	}
+
+	// Initialize Netplan if configured
+	if cfg.HasNetplanIntegration() {
+		server.netplanMgr = netplan.NewManagerWithConfig(cfg)
+
+		logger.GetLogger().Info("Netplan integration enabled via config file",
+			zap.String("config_path", cfg.Netplan.ConfigPath))
+	}
+
+	return server
 }
 
 // GetVersion retrieves the current HAProxy configuration version from the HAProxy Data Plane API
