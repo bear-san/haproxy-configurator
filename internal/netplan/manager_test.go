@@ -19,7 +19,7 @@ func setupTest() {
 func TestGetSubnetMaskForIP(t *testing.T) {
 	setupTest()
 	
-	cfg := &config.NetplanConfig{
+	cfg := &config.Config{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
 				{
@@ -34,7 +34,7 @@ func TestGetSubnetMaskForIP(t *testing.T) {
 		},
 	}
 
-	manager := NewManager(cfg)
+	manager := NewManagerWithConfig(cfg)
 
 	testCases := []struct {
 		ip           string
@@ -69,10 +69,10 @@ func TestGetSubnetMaskForIP(t *testing.T) {
 	}
 }
 
-func TestNewManager(t *testing.T) {
+func TestNewManagerWithConfig(t *testing.T) {
 	setupTest()
 	
-	cfg := &config.NetplanConfig{
+	cfg := &config.Config{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
 				{
@@ -83,7 +83,7 @@ func TestNewManager(t *testing.T) {
 		},
 	}
 
-	manager := NewManager(cfg)
+	manager := NewManagerWithConfig(cfg)
 	if manager == nil {
 		t.Error("NewManager returned nil")
 		return
@@ -107,7 +107,7 @@ func TestAddIPAddressWithoutNetplanCommand(t *testing.T) {
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "test-netplan.yaml")
 
-	cfg := &config.NetplanConfig{
+	cfg := &config.Config{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
 				{
@@ -120,7 +120,7 @@ func TestAddIPAddressWithoutNetplanCommand(t *testing.T) {
 		},
 	}
 
-	manager := NewManager(cfg)
+	manager := NewManagerWithConfig(cfg)
 
 	// Test adding IP address
 	err := manager.AddIPAddress("192.168.1.100", 80)
@@ -166,7 +166,7 @@ func TestRemoveIPAddressWithoutNetplanCommand(t *testing.T) {
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "test-netplan.yaml")
 
-	cfg := &config.NetplanConfig{
+	cfg := &config.Config{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
 				{
@@ -179,7 +179,7 @@ func TestRemoveIPAddressWithoutNetplanCommand(t *testing.T) {
 		},
 	}
 
-	manager := NewManager(cfg)
+	manager := NewManagerWithConfig(cfg)
 
 	// First add an IP
 	err := manager.AddIPAddress("192.168.1.100", 80)
@@ -214,7 +214,7 @@ func TestRemoveIPAddressWithoutNetplanCommand(t *testing.T) {
 
 func TestAddIPAddressValidation(t *testing.T) {
 	setupTest()
-	cfg := &config.NetplanConfig{
+	cfg := &config.Config{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
 				{
@@ -226,7 +226,7 @@ func TestAddIPAddressValidation(t *testing.T) {
 		},
 	}
 
-	manager := NewManager(cfg)
+	manager := NewManagerWithConfig(cfg)
 
 	// Test empty IP address
 	err := manager.AddIPAddress("", 80)
@@ -243,7 +243,7 @@ func TestAddIPAddressValidation(t *testing.T) {
 
 func TestTrackingMechanism(t *testing.T) {
 	setupTest()
-	cfg := &config.NetplanConfig{
+	cfg := &config.Config{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
 				{
@@ -258,7 +258,7 @@ func TestTrackingMechanism(t *testing.T) {
 		},
 	}
 
-	manager := NewManager(cfg)
+	manager := NewManagerWithConfig(cfg)
 
 	// Test tracking state is initially empty
 	tracked := manager.GetTrackedAddresses()
@@ -295,7 +295,7 @@ func TestBackupFileCreation(t *testing.T) {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
-	cfg := &config.NetplanConfig{
+	cfg := &config.Config{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
 				{
@@ -308,7 +308,7 @@ func TestBackupFileCreation(t *testing.T) {
 		},
 	}
 
-	manager := NewManager(cfg)
+	manager := NewManagerWithConfig(cfg)
 
 	// Call createBackup directly
 	err := manager.createBackup(configPath)
@@ -342,7 +342,7 @@ func TestBackupFileCreation(t *testing.T) {
 
 func TestTransactionBasicFlow(t *testing.T) {
 	setupTest()
-	cfg := &config.NetplanConfig{
+	cfg := &config.Config{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
 				{
@@ -354,7 +354,7 @@ func TestTransactionBasicFlow(t *testing.T) {
 		},
 	}
 
-	manager := NewManager(cfg)
+	manager := NewManagerWithConfig(cfg)
 	transactionID := "test-tx-123"
 
 	// Test adding IP address to transaction
@@ -397,7 +397,7 @@ func TestTransactionCommit(t *testing.T) {
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "test-netplan.yaml")
 
-	cfg := &config.NetplanConfig{
+	cfg := &config.Config{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
 				{
@@ -410,7 +410,7 @@ func TestTransactionCommit(t *testing.T) {
 		},
 	}
 
-	manager := NewManager(cfg)
+	manager := NewManagerWithConfig(cfg)
 	transactionID := "test-commit-tx-456"
 
 	// Add changes to transaction
