@@ -107,6 +107,7 @@ The HAProxy Configurator can automatically manage network interface IP addresses
 - **Automatic Cleanup**: When deleting bind configurations, IP addresses are removed from network interfaces
 - **Transaction-based Apply**: Netplan changes are only applied when HAProxy transactions are committed
 - **Subnet-based Interface Mapping**: Configure which network interface should be used for different IP subnets
+- **VLAN Support**: Full support for VLAN interfaces using the `vlan_name@parent_interface` format
 - **Intelligent Subnet Mask Detection**: Automatically determines the correct subnet mask based on the configured subnet mappings (e.g., IP 192.168.1.100 in subnet 192.168.1.0/24 will be assigned as 192.168.1.100/24)
 - **Backup Support**: Automatically backup existing Netplan configurations before making changes
 - **Rollback Support**: If HAProxy configuration fails, Netplan changes are automatically rolled back
@@ -125,6 +126,10 @@ netplan:
     - interface: "eth1"
       subnets:
         - "172.16.0.0/16"
+    # VLAN interface example
+    - interface: "vlan100@eth0"
+      subnets:
+        - "10.100.0.0/24"
   netplan_config_path: "/etc/netplan/99-haproxy.yaml"
   backup_enabled: true
 ```
@@ -132,7 +137,8 @@ netplan:
 ### Configuration Options
 
 - `interface_mappings`: List of interface to subnet mappings
-  - `interface`: Network interface name (e.g., "eth0", "ens3")
+  - `interface`: Network interface name (e.g., "eth0", "ens3", "vlan2@eth0")
+    - For VLAN interfaces, use the format `vlan_name@parent_interface` (e.g., "vlan2@eth0")
   - `subnets`: List of CIDR subnets that should be assigned to this interface
 - `netplan_config_path`: Path where Netplan configuration will be written
 - `backup_enabled`: Whether to create backup files before modifying Netplan configuration
@@ -150,6 +156,8 @@ netplan:
 
 1. **Bind Creation**: When a bind is created, the system:
    - Determines which network interface should host the IP address based on subnet mappings
+   - For VLAN interfaces (e.g., `vlan100@eth0`), creates/updates the VLAN section in Netplan
+   - For regular interfaces, updates the ethernets section in Netplan
    - Adds the IP address to the Netplan configuration for that interface
    - Generates the Netplan configuration (but doesn't apply it yet)
    - Creates the HAProxy bind configuration

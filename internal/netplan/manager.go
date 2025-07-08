@@ -52,10 +52,29 @@ type NetplanConfiguration struct {
 type NetplanNetwork struct {
 	Version   int                         `yaml:"version"`
 	Ethernets map[string]NetplanInterface `yaml:"ethernets,omitempty"`
+	Vlans     map[string]NetplanVLAN      `yaml:"vlans,omitempty"`
 }
 
 // NetplanInterface represents a network interface configuration
 type NetplanInterface struct {
+	Addresses []string `yaml:"addresses,omitempty"`
+	DHCP4     bool     `yaml:"dhcp4,omitempty"`
+	DHCP6     bool     `yaml:"dhcp6,omitempty"`
+}
+
+// NetplanVLAN represents a VLAN interface configuration
+type NetplanVLAN struct {
+	ID        int                `yaml:"id"`
+	Link      string             `yaml:"link"`
+	Optional  bool               `yaml:"optional,omitempty"`
+	Addresses []string           `yaml:"addresses,omitempty"`
+	DHCP4     bool               `yaml:"dhcp4,omitempty"`
+	DHCP6     bool               `yaml:"dhcp6,omitempty"`
+	Nameservers *NetplanNameservers `yaml:"nameservers,omitempty"`
+}
+
+// NetplanNameservers represents DNS configuration
+type NetplanNameservers struct {
 	Addresses []string `yaml:"addresses,omitempty"`
 }
 
@@ -83,6 +102,17 @@ func NewManager(cfg *config.NetplanConfig) *Manager {
 	}
 }
 
+// parseInterfaceName parses an interface name that might be in VLAN format (vlan@nic)
+func parseInterfaceName(interfaceName string) (vlanName, nicName string, isVLAN bool) {
+	parts := strings.Split(interfaceName, "@")
+	if len(parts) == 2 {
+		// VLAN format: vlan@nic
+		return parts[0], parts[1], true
+	}
+	// Regular interface
+	return "", interfaceName, false
+}
+
 // AddIPAddress adds an IP address to the appropriate interface
 func (m *Manager) AddIPAddress(ipAddr string, _ int) error {
 	if ipAddr == "" {
@@ -104,13 +134,6 @@ func (m *Manager) AddIPAddress(ipAddr string, _ int) error {
 		return fmt.Errorf("failed to load Netplan config: %w", err)
 	}
 
-	// Add the IP address to the interface
-	if netplanConfig.Network.Ethernets == nil {
-		netplanConfig.Network.Ethernets = make(map[string]NetplanInterface)
-	}
-
-	iface := netplanConfig.Network.Ethernets[interfaceName]
-
 	// Get the appropriate subnet mask for this IP
 	subnetMask, err := m.getSubnetMaskForIP(ipAddr)
 	if err != nil {
@@ -123,18 +146,56 @@ func (m *Manager) AddIPAddress(ipAddr string, _ int) error {
 
 	fullAddr := fmt.Sprintf("%s%s", ipAddr, subnetMask)
 
-	// Check if IP already exists
-	for _, addr := range iface.Addresses {
-		if strings.HasPrefix(addr, ipAddr) {
-			// IP already exists, no need to add
-			m.addresses[ipAddr] = interfaceName
-			return nil
-		}
-	}
+	// Parse interface name to check if it's a VLAN
+	vlanName, nicName, isVLAN := parseInterfaceName(interfaceName)
 
-	// Add the new IP address with proper subnet mask
-	iface.Addresses = append(iface.Addresses, fullAddr)
-	netplanConfig.Network.Ethernets[interfaceName] = iface
+	if isVLAN {
+		// Handle VLAN interface
+		if netplanConfig.Network.Vlans == nil {
+			netplanConfig.Network.Vlans = make(map[string]NetplanVLAN)
+		}
+
+		vlan := netplanConfig.Network.Vlans[vlanName]
+		
+		// Check if IP already exists
+		for _, addr := range vlan.Addresses {
+			if strings.HasPrefix(addr, ipAddr) {
+				// IP already exists, no need to add
+				m.addresses[ipAddr] = interfaceName
+				return nil
+			}
+		}
+
+		// Add the new IP address
+		vlan.Addresses = append(vlan.Addresses, fullAddr)
+		
+		// Ensure link is set to the correct NIC
+		if vlan.Link == "" {
+			vlan.Link = nicName
+		}
+		
+		netplanConfig.Network.Vlans[vlanName] = vlan
+	} else {
+		// Handle regular Ethernet interface
+		if netplanConfig.Network.Ethernets == nil {
+			netplanConfig.Network.Ethernets = make(map[string]NetplanInterface)
+		}
+
+		iface := netplanConfig.Network.Ethernets[interfaceName]
+
+		// Check if IP already exists
+		for _, addr := range iface.Addresses {
+			if strings.HasPrefix(addr, ipAddr) {
+				// IP already exists, no need to add
+				m.addresses[ipAddr] = interfaceName
+				return nil
+			}
+		}
+
+		// Add the new IP address
+		iface.Addresses = append(iface.Addresses, fullAddr)
+		netplanConfig.Network.Ethernets[interfaceName] = iface
+	}
 
 	// Save the configuration
 	if err := m.saveNetplanConfig(netplanConfig); err != nil {
@@ -166,30 +227,61 @@ func (m *Manager) RemoveIPAddress(ipAddr string) error {
 		return fmt.Errorf("failed to load Netplan config: %w", err)
 	}
 
-	// Remove the IP address from the interface
-	if netplanConfig.Network.Ethernets == nil {
-		return fmt.Errorf("no ethernet interfaces configured")
-	}
+	// Parse interface name to check if it's a VLAN
+	vlanName, _, isVLAN := parseInterfaceName(interfaceName)
 
-	iface, exists := netplanConfig.Network.Ethernets[interfaceName]
-	if !exists {
-		return fmt.Errorf("interface %s not found in Netplan config", interfaceName)
-	}
-
-	// Filter out the IP address
-	var newAddresses []string
-	for _, addr := range iface.Addresses {
-		if !strings.HasPrefix(addr, ipAddr) {
-			newAddresses = append(newAddresses, addr)
+	if isVLAN {
+		// Handle VLAN interface
+		if netplanConfig.Network.Vlans == nil {
+			return fmt.Errorf("no VLAN interfaces configured")
 		}
-	}
 
-	iface.Addresses = newAddresses
-	netplanConfig.Network.Ethernets[interfaceName] = iface
+		vlan, exists := netplanConfig.Network.Vlans[vlanName]
+		if !exists {
+			return fmt.Errorf("VLAN %s not found in Netplan config", vlanName)
+		}
 
-	// If no addresses left, remove the interface from config
-	if len(iface.Addresses) == 0 {
-		delete(netplanConfig.Network.Ethernets, interfaceName)
+		// Filter out the IP address
+		var newAddresses []string
+		for _, addr := range vlan.Addresses {
+			if !strings.HasPrefix(addr, ipAddr) {
+				newAddresses = append(newAddresses, addr)
+			}
+		}
+
+		vlan.Addresses = newAddresses
+		netplanConfig.Network.Vlans[vlanName] = vlan
+
+		// If no addresses left, remove the VLAN from config
+		if len(vlan.Addresses) == 0 {
+			delete(netplanConfig.Network.Vlans, vlanName)
+		}
+	} else {
+		// Handle regular Ethernet interface
+		if netplanConfig.Network.Ethernets == nil {
+			return fmt.Errorf("no ethernet interfaces configured")
+		}
+
+		iface, exists := netplanConfig.Network.Ethernets[interfaceName]
+		if !exists {
+			return fmt.Errorf("interface %s not found in Netplan config", interfaceName)
+		}
+
+		// Filter out the IP address
+		var newAddresses []string
+		for _, addr := range iface.Addresses {
+			if !strings.HasPrefix(addr, ipAddr) {
+				newAddresses = append(newAddresses, addr)
+			}
+		}
+
+		iface.Addresses = newAddresses
+		netplanConfig.Network.Ethernets[interfaceName] = iface
+
+		// If no addresses left, remove the interface from config
+		if len(iface.Addresses) == 0 {
+			delete(netplanConfig.Network.Ethernets, interfaceName)
+		}
 	}
 
 	// Save the configuration
@@ -555,47 +647,103 @@ func (m *Manager) saveTransaction(transaction *Transaction) error {
 
 // applyChange applies a single change to the Netplan configuration
 func (m *Manager) applyChange(netplanConfig *NetplanConfiguration, change TransactionChange) error {
-	if netplanConfig.Network.Ethernets == nil {
-		netplanConfig.Network.Ethernets = make(map[string]NetplanInterface)
-	}
+	// Parse interface name to check if it's a VLAN
+	vlanName, nicName, isVLAN := parseInterfaceName(change.Interface)
 
-	iface := netplanConfig.Network.Ethernets[change.Interface]
+	if isVLAN {
+		// Handle VLAN interface
+		if netplanConfig.Network.Vlans == nil {
+			netplanConfig.Network.Vlans = make(map[string]NetplanVLAN)
+		}
 
-	switch change.Operation {
-	case "add":
-		fullAddr := fmt.Sprintf("%s%s", change.IPAddress, change.SubnetMask)
-		
-		// Check if IP already exists
-		for _, addr := range iface.Addresses {
-			if strings.HasPrefix(addr, change.IPAddress) {
-				// IP already exists, no need to add
-				return nil
+		vlan := netplanConfig.Network.Vlans[vlanName]
+
+		switch change.Operation {
+		case "add":
+			fullAddr := fmt.Sprintf("%s%s", change.IPAddress, change.SubnetMask)
+			
+			// Check if IP already exists
+			for _, addr := range vlan.Addresses {
+				if strings.HasPrefix(addr, change.IPAddress) {
+					// IP already exists, no need to add
+					return nil
+				}
 			}
-		}
-		
-		// Add the new IP address
-		iface.Addresses = append(iface.Addresses, fullAddr)
-		netplanConfig.Network.Ethernets[change.Interface] = iface
-
-	case "remove":
-		// Filter out the IP address
-		var newAddresses []string
-		for _, addr := range iface.Addresses {
-			if !strings.HasPrefix(addr, change.IPAddress) {
-				newAddresses = append(newAddresses, addr)
+			
+			// Add the new IP address
+			vlan.Addresses = append(vlan.Addresses, fullAddr)
+			
+			// Ensure link is set to the correct NIC
+			if vlan.Link == "" {
+				vlan.Link = nicName
 			}
+			
+			netplanConfig.Network.Vlans[vlanName] = vlan
+
+		case "remove":
+			// Filter out the IP address
+			var newAddresses []string
+			for _, addr := range vlan.Addresses {
+				if !strings.HasPrefix(addr, change.IPAddress) {
+					newAddresses = append(newAddresses, addr)
+				}
+			}
+			
+			vlan.Addresses = newAddresses
+			netplanConfig.Network.Vlans[vlanName] = vlan
+			
+			// If no addresses left, remove the VLAN from config
+			if len(vlan.Addresses) == 0 {
+				delete(netplanConfig.Network.Vlans, vlanName)
+			}
+
+		default:
+			return fmt.Errorf("unknown operation: %s", change.Operation)
 		}
-		
-		iface.Addresses = newAddresses
-		netplanConfig.Network.Ethernets[change.Interface] = iface
-		
-		// If no addresses left, remove the interface from config
-		if len(iface.Addresses) == 0 {
-			delete(netplanConfig.Network.Ethernets, change.Interface)
+	} else {
+		// Handle regular Ethernet interface
+		if netplanConfig.Network.Ethernets == nil {
+			netplanConfig.Network.Ethernets = make(map[string]NetplanInterface)
 		}
 
-	default:
-		return fmt.Errorf("unknown operation: %s", change.Operation)
+		iface := netplanConfig.Network.Ethernets[change.Interface]
+
+		switch change.Operation {
+		case "add":
+			fullAddr := fmt.Sprintf("%s%s", change.IPAddress, change.SubnetMask)
+			
+			// Check if IP already exists
+			for _, addr := range iface.Addresses {
+				if strings.HasPrefix(addr, change.IPAddress) {
+					// IP already exists, no need to add
+					return nil
+				}
+			}
+			
+			// Add the new IP address
+			iface.Addresses = append(iface.Addresses, fullAddr)
+			netplanConfig.Network.Ethernets[change.Interface] = iface
+
+		case "remove":
+			// Filter out the IP address
+			var newAddresses []string
+			for _, addr := range iface.Addresses {
+				if !strings.HasPrefix(addr, change.IPAddress) {
+					newAddresses = append(newAddresses, addr)
+				}
+			}
+			
+			iface.Addresses = newAddresses
+			netplanConfig.Network.Ethernets[change.Interface] = iface
+			
+			// If no addresses left, remove the interface from config
+			if len(iface.Addresses) == 0 {
+				delete(netplanConfig.Network.Ethernets, change.Interface)
+			}
+
+		default:
+			return fmt.Errorf("unknown operation: %s", change.Operation)
+		}
 	}
 
 	return nil
