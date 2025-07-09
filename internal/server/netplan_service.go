@@ -4,11 +4,17 @@ import (
 	"github.com/bear-san/haproxy-configurator/internal/logger"
 	pb "github.com/bear-san/haproxy-configurator/pkg/haproxy/v1"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 
 // CreateBindWithNetplan creates a bind configuration and manages IP address assignment
 func (s *HAProxyManagerServer) CreateBindWithNetplan(req *pb.CreateBindRequest) (*pb.CreateBindResponse, error) {
+	if req.TransactionId == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "transaction ID is required")
+	}
+
 	logger.GetLogger().Info("Creating bind with Netplan integration",
 		zap.String("frontend_name", req.FrontendName),
 		zap.String("address", req.Bind.Address),
@@ -57,6 +63,10 @@ func (s *HAProxyManagerServer) CreateBindWithNetplan(req *pb.CreateBindRequest) 
 
 // DeleteBindWithNetplan removes a bind configuration and cleans up IP address assignment
 func (s *HAProxyManagerServer) DeleteBindWithNetplan(req *pb.DeleteBindRequest) (*pb.DeleteBindResponse, error) {
+	if req.TransactionId == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "transaction ID is required")
+	}
+
 	logger.GetLogger().Info("Deleting bind with Netplan integration",
 		zap.String("frontend_name", req.FrontendName),
 		zap.String("bind_name", req.Name),
@@ -115,6 +125,10 @@ func (s *HAProxyManagerServer) DeleteBindWithNetplan(req *pb.DeleteBindRequest) 
 
 // CommitTransactionWithNetplan commits the transaction and applies Netplan changes
 func (s *HAProxyManagerServer) CommitTransactionWithNetplan(req *pb.CommitTransactionRequest) (*pb.CommitTransactionResponse, error) {
+	if req.TransactionId == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "transaction ID is required")
+	}
+
 	logger.GetLogger().Info("Committing transaction with Netplan integration",
 		zap.String("transaction_id", req.TransactionId))
 

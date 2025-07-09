@@ -113,7 +113,9 @@ func parseInterfaceName(interfaceName string) (vlanName, nicName string, isVLAN 
 	return "", interfaceName, false
 }
 
-// AddIPAddress adds an IP address to the appropriate interface
+// AddIPAddress adds an IP address to the appropriate network interface based on subnet mappings.
+// It determines the correct interface, applies the appropriate subnet mask, and updates the Netplan configuration.
+// Returns an error if the IP address is invalid or no interface mapping is found.
 func (m *Manager) AddIPAddress(ipAddr string, _ int) error {
 	if ipAddr == "" {
 		return fmt.Errorf("IP address cannot be empty")
@@ -208,7 +210,9 @@ func (m *Manager) AddIPAddress(ipAddr string, _ int) error {
 	return nil
 }
 
-// RemoveIPAddress removes an IP address from the interface
+// RemoveIPAddress removes an IP address from its assigned network interface.
+// It first checks the tracking map, then falls back to finding the interface via subnet mappings.
+// Returns an error if the IP address is not found or cannot be removed.
 func (m *Manager) RemoveIPAddress(ipAddr string) error {
 	// Find which interface this IP was assigned to
 	interfaceName, exists := m.addresses[ipAddr]
@@ -295,7 +299,9 @@ func (m *Manager) RemoveIPAddress(ipAddr string) error {
 	return nil
 }
 
-// ApplyNetplan generates and applies the Netplan configuration
+// ApplyNetplan generates and applies the Netplan configuration to the system.
+// It first runs 'netplan generate' to validate the configuration, then 'netplan apply' to activate it.
+// Returns an error if either command fails.
 func (m *Manager) ApplyNetplan() error {
 	// Generate the configuration first
 	if err := m.generateNetplan(); err != nil {
@@ -414,7 +420,8 @@ func (m *Manager) createBackup(configPath string) error {
 	return nil
 }
 
-// GetTrackedAddresses returns the currently tracked IP addresses
+// GetTrackedAddresses returns a copy of the currently tracked IP addresses.
+// The returned map contains IP addresses as keys and their assigned interfaces as values.
 func (m *Manager) GetTrackedAddresses() map[string]string {
 	result := make(map[string]string)
 	for ip, iface := range m.addresses {
@@ -450,7 +457,9 @@ func (m *Manager) getSubnetMaskForIP(ipAddr string) (string, error) {
 
 // Transaction management methods
 
-// AddIPAddressToTransaction adds an IP address change to a transaction
+// AddIPAddressToTransaction adds an IP address assignment to a pending transaction.
+// The IP address will be added to the appropriate interface when the transaction is committed.
+// Returns an error if the IP address is invalid or no interface mapping is found.
 func (m *Manager) AddIPAddressToTransaction(transactionID, ipAddr string, port int) error {
 	if ipAddr == "" {
 		return fmt.Errorf("IP address cannot be empty")
@@ -486,7 +495,9 @@ func (m *Manager) AddIPAddressToTransaction(transactionID, ipAddr string, port i
 	})
 }
 
-// RemoveIPAddressFromTransaction adds an IP address removal to a transaction
+// RemoveIPAddressFromTransaction adds an IP address removal to a pending transaction.
+// The IP address will be removed from its interface when the transaction is committed.
+// Returns an error if the IP address is invalid or no interface mapping is found.
 func (m *Manager) RemoveIPAddressFromTransaction(transactionID, ipAddr string) error {
 	if ipAddr == "" {
 		return fmt.Errorf("IP address cannot be empty")
@@ -510,7 +521,9 @@ func (m *Manager) RemoveIPAddressFromTransaction(transactionID, ipAddr string) e
 	})
 }
 
-// CommitTransaction applies all changes in a transaction
+// CommitTransaction applies all pending changes in a transaction to the Netplan configuration.
+// It loads the transaction, applies all changes, saves the configuration, and updates tracking.
+// Returns an error if the transaction cannot be loaded, applied, or if any changes fail.
 func (m *Manager) CommitTransaction(transactionID string) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
