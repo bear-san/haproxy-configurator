@@ -19,17 +19,8 @@ A gRPC-based HAProxy configuration management service with Protocol Buffers.
 # Build the server
 go build -o bin/haproxy-configurator ./cmd/server
 
-# Run the server (default port 50051, using environment variables)
-./bin/haproxy-configurator
-
-# Run on custom port
-./bin/haproxy-configurator -port 8080
-
-# Run with unified configuration file (recommended)
-./bin/haproxy-configurator -config /path/to/config.yaml
-
-# Run with legacy Netplan integration only
-./bin/haproxy-configurator -netplan-config /path/to/netplan-config.yaml
+# Run with configuration file (required)
+./bin/haproxy-configurator -f /path/to/config.yaml
 ```
 
 ### Protocol Buffer Generation
@@ -82,7 +73,6 @@ grpcurl -plaintext localhost:50051 haproxy.v1.HAProxyManagerService/GetVersion
 │   └── server/            # gRPC server implementation
 ├── cmd/server/           # Server main entry point
 ├── examples/             # Configuration file examples
-│   └── netplan-config.yaml # Sample Netplan configuration
 ├── .goreleaser.yml       # GoReleaser configuration
 ├── buf.yaml              # Buf configuration
 └── buf.gen.yaml          # Buf code generation config
@@ -101,12 +91,6 @@ This implementation provides:
 - ✅ File-based transaction management for concurrent operations
 
 ## Configuration
-
-The HAProxy Configurator supports two configuration methods:
-1. **Unified Configuration File** (recommended): Single YAML file containing both HAProxy and Netplan settings
-2. **Environment Variables + Separate Netplan Config** (legacy): Environment variables for HAProxy, separate file for Netplan
-
-### Unified Configuration File
 
 Create a unified configuration file (e.g., `config.yaml`):
 
@@ -133,16 +117,8 @@ netplan:
 
 Run the server:
 ```bash
-./bin/haproxy-configurator -config /path/to/config.yaml
+./bin/haproxy-configurator -f /path/to/config.yaml
 ```
-
-### Environment Variables Configuration
-
-The following environment variables are used when no configuration file is provided:
-
-- `HAPROXY_API_URL`: HAProxy Data Plane API URL (default: `http://localhost:5555`)
-- `HAPROXY_API_USERNAME`: API username (default: `admin`)
-- `HAPROXY_API_PASSWORD`: API password (default: `admin`)
 
 ## Netplan Integration
 
@@ -159,28 +135,6 @@ The HAProxy Configurator can automatically manage network interface IP addresses
 - **Backup Support**: Automatically backup existing Netplan configurations before making changes
 - **Rollback Support**: If HAProxy configuration fails, Netplan changes are automatically rolled back
 
-### Configuration
-
-Create a Netplan configuration file (e.g., `netplan-config.yaml`):
-
-```yaml
-netplan:
-  interface_mappings:
-    - interface: "eth0"
-      subnets:
-        - "192.168.1.0/24"
-        - "10.0.0.0/24"
-    - interface: "eth1"
-      subnets:
-        - "172.16.0.0/16"
-    # VLAN interface example
-    - interface: "vlan100@eth0"
-      subnets:
-        - "10.100.0.0/24"
-  netplan_config_path: "/etc/netplan/99-haproxy.yaml"
-  backup_enabled: true
-```
-
 ### Configuration Options
 
 - `interface_mappings`: List of interface to subnet mappings
@@ -192,10 +146,10 @@ netplan:
 
 ### Usage
 
-1. Create your Netplan configuration file
-2. Start the server with Netplan integration:
+1. Create your unified configuration file with Netplan settings
+2. Start the server:
    ```bash
-   ./bin/haproxy-configurator -netplan-config /path/to/netplan-config.yaml
+   ./bin/haproxy-configurator -f /path/to/config.yaml
    ```
 3. Create HAProxy bind configurations as usual - IP addresses will be automatically managed
 

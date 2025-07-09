@@ -18,6 +18,7 @@ import (
 
 var (
 	port        int
+	listenAddr  string
 	configFile  string
 	development bool
 )
@@ -30,14 +31,15 @@ through the HAProxy Data Plane API. It also supports optional Netplan integratio
 for network configuration management.
 
 Configuration:
-  Use the -config flag to specify a unified configuration file containing
+  Use the -f/--config flag to specify a unified configuration file containing
   both HAProxy and Netplan settings.`,
 	Run: runServer,
 }
 
 func init() {
 	rootCmd.Flags().IntVarP(&port, "port", "p", 50051, "The server port")
-	rootCmd.Flags().StringVarP(&configFile, "config", "c", "", "Path to the unified configuration file (required)")
+	rootCmd.Flags().StringVarP(&listenAddr, "listen", "l", "0.0.0.0", "The server listen address")
+	rootCmd.Flags().StringVarP(&configFile, "config", "f", "", "Path to the unified configuration file (required)")
 	rootCmd.Flags().BoolVarP(&development, "development", "d", false, "Enable development mode logging")
 
 	// Make config flag required
@@ -60,16 +62,19 @@ func runServer(cmd *cobra.Command, args []string) {
 	}
 	defer logger.Sync()
 
+	// Construct the listen address
+	listenAddress := fmt.Sprintf("%s:%d", listenAddr, port)
+	
 	logger.GetLogger().Info("Starting HAProxy Configurator gRPC server",
-		zap.Int("port", port),
+		zap.String("listen_address", listenAddress),
 		zap.String("config_file", configFile),
 		zap.Bool("development_mode", development))
 
-	// Create a TCP listener on the specified port
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	// Create a TCP listener on the specified address and port
+	lis, err := net.Listen("tcp", listenAddress)
 	if err != nil {
 		logger.GetLogger().Fatal("Failed to listen",
-			zap.Int("port", port),
+			zap.String("listen_address", listenAddress),
 			zap.Error(err))
 	}
 
@@ -106,7 +111,7 @@ func runServer(cmd *cobra.Command, args []string) {
 	reflection.Register(s)
 
 	logger.GetLogger().Info("HAProxy Configurator gRPC server ready",
-		zap.Int("port", port),
+		zap.String("listen_address", listenAddress),
 		zap.String("example_command", fmt.Sprintf("grpcurl -plaintext localhost:%d list", port)))
 
 	// Start serving
