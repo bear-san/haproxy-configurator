@@ -127,7 +127,7 @@ type Backend struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Balance       *BackendBalance        `protobuf:"bytes,2,opt,name=balance,proto3" json:"balance,omitempty"`
-	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"` // Required: Unique identifier for the backend
 	Mode          ProxyMode              `protobuf:"varint,4,opt,name=mode,proto3,enum=haproxy.v1.ProxyMode" json:"mode,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

@@ -13,7 +13,7 @@ message Frontend {
   bool disabled = 3;
   bool enabled = 4;
   int32 id = 5;
-  string name = 6;
+  string name = 6; // Required: Unique identifier for the frontend
   ProxyMode mode = 7;
 }
 

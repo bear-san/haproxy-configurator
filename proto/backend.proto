@@ -24,7 +24,7 @@ message BackendBalance {
 message Backend {
   int32 id = 1;
   BackendBalance balance = 2;
-  string name = 3;
+  string name = 3; // Required: Unique identifier for the backend
   ProxyMode mode = 4;
 }
 

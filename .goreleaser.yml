@@ -25,49 +25,7 @@ builds:
       - -X main.commit={{.Commit}}
       - -X main.date={{.Date}}
 
-# Docker configuration
-dockers:
-  - image_templates:
-      - "bear-san/haproxy-configurator:{{ .Version }}-amd64"
-      - "bear-san/haproxy-configurator:latest-amd64"
-    dockerfile: Dockerfile
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--platform=linux/amd64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-    goarch: amd64
-    
-  - image_templates:
-      - "bear-san/haproxy-configurator:{{ .Version }}-arm64"
-      - "bear-san/haproxy-configurator:latest-arm64"
-    dockerfile: Dockerfile
-    use: buildx
-    build_flag_templates:
-      - "--pull"
-      - "--platform=linux/arm64"
-      - "--label=org.opencontainers.image.created={{.Date}}"
-      - "--label=org.opencontainers.image.title={{.ProjectName}}"
-      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-      - "--label=org.opencontainers.image.version={{.Version}}"
-      - "--label=org.opencontainers.image.source={{.GitURL}}"
-    goarch: arm64
-
-# Docker manifest for multi-arch images
-docker_manifests:
-  - name_template: "bear-san/haproxy-configurator:{{ .Version }}"
-    image_templates:
-      - "bear-san/haproxy-configurator:{{ .Version }}-amd64"
-      - "bear-san/haproxy-configurator:{{ .Version }}-arm64"
-      
-  - name_template: "bear-san/haproxy-configurator:latest"
-    image_templates:
-      - "bear-san/haproxy-configurator:latest-amd64"
-      - "bear-san/haproxy-configurator:latest-arm64"
+# No Docker configuration - CLI tool only
 
 # Archive configuration (v2 format)
 archives:

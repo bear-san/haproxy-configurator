@@ -1,0 +1,42 @@
+# HAProxy Configurator unified configuration file
+# This file contains both HAProxy and Netplan settings
+
+# HAProxy Data Plane API configuration
+haproxy:
+  api_url: "http://localhost:5555"
+  username: "admin"
+  password: "admin"
+
+# Netplan integration configuration (optional)
+# Remove this section to disable Netplan integration
+netplan:
+  interface_mappings:
+    # Regular Ethernet interface
+    - interface: "eth0"
+      subnets:
+        - "192.168.1.0/24"
+        - "10.0.0.0/24"
+    
+    # Another Ethernet interface
+    - interface: "eth1"
+      subnets:
+        - "172.16.0.0/16"
+    
+    # VLAN interface example
+    - interface: "vlan100@eth0"
+      subnets:
+        - "10.100.0.0/24"
+    
+    # Multiple VLAN interfaces on the same parent
+    - interface: "vlan200@eth0"
+      subnets:
+        - "10.200.0.0/24"
+
+  # Path where Netplan configuration will be written
+  netplan_config_path: "/etc/netplan/99-haproxy-configurator.yaml"
+  
+  # Enable backup of existing Netplan configuration
+  backup_enabled: true
+  
+  # Directory for storing transaction files (optional)
+  transaction_dir: "/tmp/haproxy-netplan-transactions"

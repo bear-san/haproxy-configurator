@@ -1,8 +1,8 @@
 package server
 
 import (
-	v3 "github.com/bear-san/haproxy-go/dataplane/v3"
 	pb "github.com/bear-san/haproxy-configurator/pkg/haproxy/v1"
+	v3 "github.com/bear-san/haproxy-go/dataplane/v3"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

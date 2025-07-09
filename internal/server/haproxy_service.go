@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"os"
 
-	v3 "github.com/bear-san/haproxy-go/dataplane/v3"
+	"github.com/bear-san/haproxy-configurator/internal/config"
+	"github.com/bear-san/haproxy-configurator/internal/logger"
+	"github.com/bear-san/haproxy-configurator/internal/netplan"
 	pb "github.com/bear-san/haproxy-configurator/pkg/haproxy/v1"
+	v3 "github.com/bear-san/haproxy-go/dataplane/v3"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -15,36 +18,38 @@ import (
 // HAProxyManagerServer implements the HAProxyManagerServiceServer interface
 type HAProxyManagerServer struct {
 	pb.UnimplementedHAProxyManagerServiceServer
-	client v3.Client
+	client     v3.Client
+	netplanMgr *netplan.Manager
+	config     *config.Config
 }
 
-// NewHAProxyManagerServer creates a new HAProxyManagerServer instance
-func NewHAProxyManagerServer() *HAProxyManagerServer {
-	// Get configuration from environment variables
-	baseURL := os.Getenv("HAPROXY_API_URL")
-	if baseURL == "" {
-		baseURL = "http://localhost:5555"
-	}
 
-	username := os.Getenv("HAPROXY_API_USERNAME")
-	if username == "" {
-		username = "admin"
-	}
-
-	password := os.Getenv("HAPROXY_API_PASSWORD")
-	if password == "" {
-		password = "admin"
-	}
+// NewHAProxyManagerServerWithConfig creates a new HAProxyManagerServer instance using a configuration file
+func NewHAProxyManagerServerWithConfig(cfg *config.Config) *HAProxyManagerServer {
+	logger.GetLogger().Info("Initializing HAProxy manager server with config",
+		zap.String("base_url", cfg.HAProxy.APIURL),
+		zap.String("username", cfg.HAProxy.Username))
 
 	// Create base64 encoded credentials
-	credential := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password)))
+	credential := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", cfg.HAProxy.Username, cfg.HAProxy.Password)))
 
-	return &HAProxyManagerServer{
+	server := &HAProxyManagerServer{
 		client: v3.Client{
-			BaseUrl:    baseURL,
+			BaseUrl:    cfg.HAProxy.APIURL,
 			Credential: credential,
 		},
+		config: cfg,
 	}
+
+	// Initialize Netplan if configured
+	if cfg.HasNetplanIntegration() {
+		server.netplanMgr = netplan.NewManagerWithConfig(cfg)
+
+		logger.GetLogger().Info("Netplan integration enabled via config file",
+			zap.String("config_path", cfg.Netplan.ConfigPath))
+	}
+
+	return server
 }
 
 // GetVersion retrieves the current HAProxy configuration version from the HAProxy Data Plane API
@@ -93,14 +98,8 @@ func (s *HAProxyManagerServer) CommitTransaction(_ context.Context, req *pb.Comm
 		return nil, status.Errorf(codes.InvalidArgument, "transaction ID is required")
 	}
 
-	transaction, err := s.client.CommitTransaction(req.TransactionId)
-	if err != nil {
-		return nil, handleHAProxyError(err)
-	}
-
-	return &pb.CommitTransactionResponse{
-		Transaction: convertTransactionToProto(transaction),
-	}, nil
+	// Use Netplan-aware transaction commit
+	return s.CommitTransactionWithNetplan(req)
 }
 
 // CloseTransaction closes a transaction without committing any changes
@@ -124,6 +123,9 @@ func (s *HAProxyManagerServer) CloseTransaction(_ context.Context, req *pb.Close
 func (s *HAProxyManagerServer) CreateBackend(_ context.Context, req *pb.CreateBackendRequest) (*pb.CreateBackendResponse, error) {
 	if req.Backend == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "backend is required")
+	}
+	if req.Backend.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "backend name is required")
 	}
 
 	backend := convertBackendFromProto(req.Backend)
@@ -209,6 +211,9 @@ func (s *HAProxyManagerServer) DeleteBackend(_ context.Context, req *pb.DeleteBa
 func (s *HAProxyManagerServer) CreateFrontend(_ context.Context, req *pb.CreateFrontendRequest) (*pb.CreateFrontendResponse, error) {
 	if req.Frontend == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "frontend is required")
+	}
+	if req.Frontend.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "frontend name is required")
 	}
 
 	frontend := convertFrontendFromProto(req.Frontend)
@@ -298,16 +303,12 @@ func (s *HAProxyManagerServer) CreateBind(_ context.Context, req *pb.CreateBindR
 	if req.Bind == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "bind is required")
 	}
-
-	bind := convertBindFromProto(req.Bind)
-	created, err := s.client.AddBind(req.FrontendName, req.TransactionId, *bind)
-	if err != nil {
-		return nil, handleHAProxyError(err)
+	if req.Bind.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "bind name is required")
 	}
 
-	return &pb.CreateBindResponse{
-		Bind: convertBindToProto(created),
-	}, nil
+	// Use Netplan-aware bind creation
+	return s.CreateBindWithNetplan(req)
 }
 
 // GetBind retrieves a specific bind configuration by name from a frontend
@@ -379,12 +380,8 @@ func (s *HAProxyManagerServer) DeleteBind(_ context.Context, req *pb.DeleteBindR
 		return nil, status.Errorf(codes.InvalidArgument, "bind name is required")
 	}
 
-	err := s.client.DeleteBind(req.Name, req.FrontendName, req.TransactionId)
-	if err != nil {
-		return nil, handleHAProxyError(err)
-	}
-
-	return &pb.DeleteBindResponse{}, nil
+	// Use Netplan-aware bind deletion
+	return s.DeleteBindWithNetplan(req)
 }
 
 // CreateServer creates a new server configuration in a backend
@@ -395,6 +392,9 @@ func (s *HAProxyManagerServer) CreateServer(_ context.Context, req *pb.CreateSer
 	}
 	if req.Server == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "server is required")
+	}
+	if req.Server.Name == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "server name is required")
 	}
 
 	server := convertServerFromProto(req.Server)
