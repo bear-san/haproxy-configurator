@@ -57,25 +57,64 @@ type NetplanNetwork struct {
 
 // NetplanInterface represents a network interface configuration
 type NetplanInterface struct {
-	Addresses []string `yaml:"addresses,omitempty"`
-	DHCP4     bool     `yaml:"dhcp4,omitempty"`
-	DHCP6     bool     `yaml:"dhcp6,omitempty"`
+	Addresses    []string               `yaml:"addresses,omitempty"`
+	DHCP4        bool                   `yaml:"dhcp4,omitempty"`
+	DHCP6        bool                   `yaml:"dhcp6,omitempty"`
+	Gateway4     string                 `yaml:"gateway4,omitempty"`
+	Gateway6     string                 `yaml:"gateway6,omitempty"`
+	MTU          int                    `yaml:"mtu,omitempty"`
+	MACAddress   string                 `yaml:"macaddress,omitempty"`
+	Critical     bool                   `yaml:"critical,omitempty"`
+	Optional     bool                   `yaml:"optional,omitempty"`
+	Routes       []NetplanRoute         `yaml:"routes,omitempty"`
+	Nameservers  *NetplanNameservers    `yaml:"nameservers,omitempty"`
+	Renderer     string                 `yaml:"renderer,omitempty"`
+	Match        *NetplanMatch          `yaml:"match,omitempty"`
+	SetName      string                 `yaml:"set-name,omitempty"`
+	Additional   map[string]interface{} `yaml:",inline"` // Preserve unknown fields
 }
 
 // NetplanVLAN represents a VLAN interface configuration
 type NetplanVLAN struct {
-	ID        int                `yaml:"id"`
-	Link      string             `yaml:"link"`
-	Optional  bool               `yaml:"optional,omitempty"`
-	Addresses []string           `yaml:"addresses,omitempty"`
-	DHCP4     bool               `yaml:"dhcp4,omitempty"`
-	DHCP6     bool               `yaml:"dhcp6,omitempty"`
-	Nameservers *NetplanNameservers `yaml:"nameservers,omitempty"`
+	ID          int                    `yaml:"id"`
+	Link        string                 `yaml:"link"`
+	Optional    bool                   `yaml:"optional,omitempty"`
+	Addresses   []string               `yaml:"addresses,omitempty"`
+	DHCP4       bool                   `yaml:"dhcp4,omitempty"`
+	DHCP6       bool                   `yaml:"dhcp6,omitempty"`
+	Gateway4    string                 `yaml:"gateway4,omitempty"`
+	Gateway6    string                 `yaml:"gateway6,omitempty"`
+	MTU         int                    `yaml:"mtu,omitempty"`
+	Critical    bool                   `yaml:"critical,omitempty"`
+	Routes      []NetplanRoute         `yaml:"routes,omitempty"`
+	Nameservers *NetplanNameservers    `yaml:"nameservers,omitempty"`
+	Renderer    string                 `yaml:"renderer,omitempty"`
+	Additional  map[string]interface{} `yaml:",inline"` // Preserve unknown fields
 }
 
 // NetplanNameservers represents DNS configuration
 type NetplanNameservers struct {
 	Addresses []string `yaml:"addresses,omitempty"`
+	Search    []string `yaml:"search,omitempty"`
+}
+
+// NetplanRoute represents a route configuration
+type NetplanRoute struct {
+	To       string `yaml:"to"`
+	Via      string `yaml:"via,omitempty"`
+	From     string `yaml:"from,omitempty"`
+	Metric   int    `yaml:"metric,omitempty"`
+	OnLink   bool   `yaml:"on-link,omitempty"`
+	Type     string `yaml:"type,omitempty"`
+	Scope    string `yaml:"scope,omitempty"`
+	Table    int    `yaml:"table,omitempty"`
+}
+
+// NetplanMatch represents match conditions for interface selection
+type NetplanMatch struct {
+	Name       string `yaml:"name,omitempty"`
+	MACAddress string `yaml:"macaddress,omitempty"`
+	Driver     string `yaml:"driver,omitempty"`
 }
 
 // NewManagerWithConfig creates a new Netplan manager using unified config
@@ -802,4 +841,382 @@ func (m *Manager) findInterfaceForIP(ipAddr string) (string, error) {
 	}
 
 	return "", fmt.Errorf("no interface mapping found for IP %s", ipAddr)
+}
+
+// UnmarshalYAML implements custom YAML unmarshaling to preserve unknown fields
+func (n *NetplanInterface) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	// First unmarshal into a generic map
+	var raw map[string]interface{}
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	// Initialize the Additional map
+	n.Additional = make(map[string]interface{})
+
+	// Process known fields
+	if v, ok := raw["addresses"]; ok {
+		if addrs, ok := v.([]interface{}); ok {
+			n.Addresses = make([]string, 0, len(addrs))
+			for _, addr := range addrs {
+				if s, ok := addr.(string); ok {
+					n.Addresses = append(n.Addresses, s)
+				}
+			}
+		}
+		delete(raw, "addresses")
+	}
+
+	if v, ok := raw["dhcp4"]; ok {
+		if b, ok := v.(bool); ok {
+			n.DHCP4 = b
+		}
+		delete(raw, "dhcp4")
+	}
+
+	if v, ok := raw["dhcp6"]; ok {
+		if b, ok := v.(bool); ok {
+			n.DHCP6 = b
+		}
+		delete(raw, "dhcp6")
+	}
+
+	if v, ok := raw["gateway4"]; ok {
+		if s, ok := v.(string); ok {
+			n.Gateway4 = s
+		}
+		delete(raw, "gateway4")
+	}
+
+	if v, ok := raw["gateway6"]; ok {
+		if s, ok := v.(string); ok {
+			n.Gateway6 = s
+		}
+		delete(raw, "gateway6")
+	}
+
+	if v, ok := raw["mtu"]; ok {
+		switch val := v.(type) {
+		case int:
+			n.MTU = val
+		case float64:
+			n.MTU = int(val)
+		}
+		delete(raw, "mtu")
+	}
+
+	if v, ok := raw["macaddress"]; ok {
+		if s, ok := v.(string); ok {
+			n.MACAddress = s
+		}
+		delete(raw, "macaddress")
+	}
+
+	if v, ok := raw["critical"]; ok {
+		if b, ok := v.(bool); ok {
+			n.Critical = b
+		}
+		delete(raw, "critical")
+	}
+
+	if v, ok := raw["optional"]; ok {
+		if b, ok := v.(bool); ok {
+			n.Optional = b
+		}
+		delete(raw, "optional")
+	}
+
+	if v, ok := raw["routes"]; ok {
+		if routes, ok := v.([]interface{}); ok {
+			n.Routes = make([]NetplanRoute, 0, len(routes))
+			for _, route := range routes {
+				var r NetplanRoute
+				if routeData, err := yaml.Marshal(route); err == nil {
+					if err := yaml.Unmarshal(routeData, &r); err == nil {
+						n.Routes = append(n.Routes, r)
+					}
+				}
+			}
+		}
+		delete(raw, "routes")
+	}
+
+	if v, ok := raw["nameservers"]; ok {
+		var ns NetplanNameservers
+		if nsData, err := yaml.Marshal(v); err == nil {
+			if err := yaml.Unmarshal(nsData, &ns); err == nil {
+				n.Nameservers = &ns
+			}
+		}
+		delete(raw, "nameservers")
+	}
+
+	if v, ok := raw["renderer"]; ok {
+		if s, ok := v.(string); ok {
+			n.Renderer = s
+		}
+		delete(raw, "renderer")
+	}
+
+	if v, ok := raw["match"]; ok {
+		var m NetplanMatch
+		if matchData, err := yaml.Marshal(v); err == nil {
+			if err := yaml.Unmarshal(matchData, &m); err == nil {
+				n.Match = &m
+			}
+		}
+		delete(raw, "match")
+	}
+
+	if v, ok := raw["set-name"]; ok {
+		if s, ok := v.(string); ok {
+			n.SetName = s
+		}
+		delete(raw, "set-name")
+	}
+
+	// Store remaining fields in Additional
+	for k, v := range raw {
+		n.Additional[k] = v
+	}
+
+	return nil
+}
+
+// MarshalYAML implements custom YAML marshaling to include unknown fields
+func (n NetplanInterface) MarshalYAML() (interface{}, error) {
+	// Start with the additional fields
+	result := make(map[string]interface{})
+	for k, v := range n.Additional {
+		result[k] = v
+	}
+
+	// Add known fields (only if they have non-zero values)
+	if len(n.Addresses) > 0 {
+		result["addresses"] = n.Addresses
+	}
+	if n.DHCP4 {
+		result["dhcp4"] = n.DHCP4
+	}
+	if n.DHCP6 {
+		result["dhcp6"] = n.DHCP6
+	}
+	if n.Gateway4 != "" {
+		result["gateway4"] = n.Gateway4
+	}
+	if n.Gateway6 != "" {
+		result["gateway6"] = n.Gateway6
+	}
+	if n.MTU != 0 {
+		result["mtu"] = n.MTU
+	}
+	if n.MACAddress != "" {
+		result["macaddress"] = n.MACAddress
+	}
+	if n.Critical {
+		result["critical"] = n.Critical
+	}
+	if n.Optional {
+		result["optional"] = n.Optional
+	}
+	if len(n.Routes) > 0 {
+		result["routes"] = n.Routes
+	}
+	if n.Nameservers != nil {
+		result["nameservers"] = n.Nameservers
+	}
+	if n.Renderer != "" {
+		result["renderer"] = n.Renderer
+	}
+	if n.Match != nil {
+		result["match"] = n.Match
+	}
+	if n.SetName != "" {
+		result["set-name"] = n.SetName
+	}
+
+	return result, nil
+}
+
+// UnmarshalYAML implements custom YAML unmarshaling for NetplanVLAN to preserve unknown fields
+func (n *NetplanVLAN) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	// First unmarshal into a generic map
+	var raw map[string]interface{}
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	// Initialize the Additional map
+	n.Additional = make(map[string]interface{})
+
+	// Process known fields
+	if v, ok := raw["id"]; ok {
+		switch val := v.(type) {
+		case int:
+			n.ID = val
+		case float64:
+			n.ID = int(val)
+		}
+		delete(raw, "id")
+	}
+
+	if v, ok := raw["link"]; ok {
+		if s, ok := v.(string); ok {
+			n.Link = s
+		}
+		delete(raw, "link")
+	}
+
+	if v, ok := raw["optional"]; ok {
+		if b, ok := v.(bool); ok {
+			n.Optional = b
+		}
+		delete(raw, "optional")
+	}
+
+	if v, ok := raw["addresses"]; ok {
+		if addrs, ok := v.([]interface{}); ok {
+			n.Addresses = make([]string, 0, len(addrs))
+			for _, addr := range addrs {
+				if s, ok := addr.(string); ok {
+					n.Addresses = append(n.Addresses, s)
+				}
+			}
+		}
+		delete(raw, "addresses")
+	}
+
+	if v, ok := raw["dhcp4"]; ok {
+		if b, ok := v.(bool); ok {
+			n.DHCP4 = b
+		}
+		delete(raw, "dhcp4")
+	}
+
+	if v, ok := raw["dhcp6"]; ok {
+		if b, ok := v.(bool); ok {
+			n.DHCP6 = b
+		}
+		delete(raw, "dhcp6")
+	}
+
+	if v, ok := raw["gateway4"]; ok {
+		if s, ok := v.(string); ok {
+			n.Gateway4 = s
+		}
+		delete(raw, "gateway4")
+	}
+
+	if v, ok := raw["gateway6"]; ok {
+		if s, ok := v.(string); ok {
+			n.Gateway6 = s
+		}
+		delete(raw, "gateway6")
+	}
+
+	if v, ok := raw["mtu"]; ok {
+		switch val := v.(type) {
+		case int:
+			n.MTU = val
+		case float64:
+			n.MTU = int(val)
+		}
+		delete(raw, "mtu")
+	}
+
+	if v, ok := raw["critical"]; ok {
+		if b, ok := v.(bool); ok {
+			n.Critical = b
+		}
+		delete(raw, "critical")
+	}
+
+	if v, ok := raw["routes"]; ok {
+		if routes, ok := v.([]interface{}); ok {
+			n.Routes = make([]NetplanRoute, 0, len(routes))
+			for _, route := range routes {
+				var r NetplanRoute
+				if routeData, err := yaml.Marshal(route); err == nil {
+					if err := yaml.Unmarshal(routeData, &r); err == nil {
+						n.Routes = append(n.Routes, r)
+					}
+				}
+			}
+		}
+		delete(raw, "routes")
+	}
+
+	if v, ok := raw["nameservers"]; ok {
+		var ns NetplanNameservers
+		if nsData, err := yaml.Marshal(v); err == nil {
+			if err := yaml.Unmarshal(nsData, &ns); err == nil {
+				n.Nameservers = &ns
+			}
+		}
+		delete(raw, "nameservers")
+	}
+
+	if v, ok := raw["renderer"]; ok {
+		if s, ok := v.(string); ok {
+			n.Renderer = s
+		}
+		delete(raw, "renderer")
+	}
+
+	// Store remaining fields in Additional
+	for k, v := range raw {
+		n.Additional[k] = v
+	}
+
+	return nil
+}
+
+// MarshalYAML implements custom YAML marshaling for NetplanVLAN to include unknown fields
+func (n NetplanVLAN) MarshalYAML() (interface{}, error) {
+	// Start with the additional fields
+	result := make(map[string]interface{})
+	for k, v := range n.Additional {
+		result[k] = v
+	}
+
+	// Add known fields (always include id and link as they are required)
+	result["id"] = n.ID
+	result["link"] = n.Link
+
+	// Add other fields only if they have non-zero values
+	if n.Optional {
+		result["optional"] = n.Optional
+	}
+	if len(n.Addresses) > 0 {
+		result["addresses"] = n.Addresses
+	}
+	if n.DHCP4 {
+		result["dhcp4"] = n.DHCP4
+	}
+	if n.DHCP6 {
+		result["dhcp6"] = n.DHCP6
+	}
+	if n.Gateway4 != "" {
+		result["gateway4"] = n.Gateway4
+	}
+	if n.Gateway6 != "" {
+		result["gateway6"] = n.Gateway6
+	}
+	if n.MTU != 0 {
+		result["mtu"] = n.MTU
+	}
+	if n.Critical {
+		result["critical"] = n.Critical
+	}
+	if len(n.Routes) > 0 {
+		result["routes"] = n.Routes
+	}
+	if n.Nameservers != nil {
+		result["nameservers"] = n.Nameservers
+	}
+	if n.Renderer != "" {
+		result["renderer"] = n.Renderer
+	}
+
+	return result, nil
 }
