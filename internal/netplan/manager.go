@@ -35,12 +35,43 @@ type Transaction struct {
 	Changes       []TransactionChange `json:"changes"`
 }
 
+// NetplanApplier interface for applying netplan configurations
+type NetplanApplier interface {
+	Apply() error
+}
+
+// RealNetplanApplier implements NetplanApplier using actual netplan command
+type RealNetplanApplier struct{}
+
+// Apply executes the actual netplan apply command
+func (r *RealNetplanApplier) Apply() error {
+	cmd := exec.Command("netplan", "apply")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to apply Netplan configuration: %w, output: %s", err, string(output))
+	}
+	return nil
+}
+
+// MockNetplanApplier implements NetplanApplier for testing
+type MockNetplanApplier struct {
+	ApplyCallCount int
+	ApplyError     error
+}
+
+// Apply mocks the netplan apply command for testing
+func (m *MockNetplanApplier) Apply() error {
+	m.ApplyCallCount++
+	return m.ApplyError
+}
+
 // Manager handles Netplan configuration operations
 type Manager struct {
 	config         *config.Config
 	addresses      map[string]string // IP -> Interface mapping for tracking
 	transactionDir string            // Directory for transaction files
 	mutex          sync.RWMutex      // Protects addresses map
+	applier        NetplanApplier    // Netplan applier (real or mock)
 }
 
 // NetplanConfiguration represents the structure of a Netplan YAML file
@@ -138,6 +169,27 @@ func NewManagerWithConfig(cfg *config.Config) *Manager {
 		config:         cfg,
 		addresses:      make(map[string]string),
 		transactionDir: transactionDir,
+		applier:        &RealNetplanApplier{}, // Use real applier by default
+	}
+}
+
+// NewManagerWithMock creates a new Netplan manager with a mock applier for testing
+func NewManagerWithMock(cfg *config.Config, mockApplier *MockNetplanApplier) *Manager {
+	// Use configured transaction directory or default
+	transactionDir := cfg.Netplan.TransactionDir
+	if transactionDir == "" {
+		transactionDir = "/tmp/haproxy-netplan-transactions"
+	}
+
+	// Ensure transaction directory exists
+	_ = os.MkdirAll(transactionDir, 0755)
+	_ = os.MkdirAll(filepath.Join(transactionDir, "committed"), 0755)
+
+	return &Manager{
+		config:         cfg,
+		addresses:      make(map[string]string),
+		transactionDir: transactionDir,
+		applier:        mockApplier, // Use mock applier for testing
 	}
 }
 
@@ -339,15 +391,14 @@ func (m *Manager) RemoveIPAddress(ipAddr string) error {
 }
 
 // ApplyNetplan applies the Netplan configuration to the system.
-// It runs 'netplan apply' which generates and activates the configuration.
-// Returns an error if the command fails.
+// It uses the configured applier (real or mock) to apply the configuration.
+// Returns an error if the apply fails.
 func (m *Manager) ApplyNetplan() error {
-	cmd := exec.Command("netplan", "apply")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("failed to apply Netplan configuration: %w, output: %s", err, string(output))
+	if m.applier == nil {
+		// Fallback to real applier if not set
+		m.applier = &RealNetplanApplier{}
 	}
-	return nil
+	return m.applier.Apply()
 }
 
 // loadNetplanConfig loads the current Netplan configuration directly from the specified yaml file

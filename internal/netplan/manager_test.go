@@ -18,7 +18,7 @@ func setupTest() {
 
 func TestGetSubnetMaskForIP(t *testing.T) {
 	setupTest()
-	
+
 	cfg := &config.Config{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
@@ -71,7 +71,7 @@ func TestGetSubnetMaskForIP(t *testing.T) {
 
 func TestNewManagerWithConfig(t *testing.T) {
 	setupTest()
-	
+
 	cfg := &config.Config{
 		Netplan: config.NetplanSettings{
 			InterfaceMappings: []config.InterfaceMapping{
@@ -98,10 +98,6 @@ func TestNewManagerWithConfig(t *testing.T) {
 
 func TestAddIPAddressWithoutNetplanCommand(t *testing.T) {
 	setupTest()
-	// Skip this test if running in CI or environments without netplan
-	if _, err := os.Stat("/usr/sbin/netplan"); os.IsNotExist(err) {
-		t.Skip("Skipping test: netplan command not available")
-	}
 
 	// Create temporary directory for test config
 	tmpDir := t.TempDir()
@@ -120,7 +116,9 @@ func TestAddIPAddressWithoutNetplanCommand(t *testing.T) {
 		},
 	}
 
-	manager := NewManagerWithConfig(cfg)
+	// Use mock applier to avoid calling actual netplan command
+	mockApplier := &MockNetplanApplier{}
+	manager := NewManagerWithMock(cfg, mockApplier)
 
 	// Test adding IP address
 	err := manager.AddIPAddress("192.168.1.100", 80)
@@ -157,10 +155,6 @@ func TestAddIPAddressWithoutNetplanCommand(t *testing.T) {
 
 func TestRemoveIPAddressWithoutNetplanCommand(t *testing.T) {
 	setupTest()
-	// Skip this test if running in CI or environments without netplan
-	if _, err := os.Stat("/usr/sbin/netplan"); os.IsNotExist(err) {
-		t.Skip("Skipping test: netplan command not available")
-	}
 
 	// Create temporary directory for test config
 	tmpDir := t.TempDir()
@@ -179,7 +173,9 @@ func TestRemoveIPAddressWithoutNetplanCommand(t *testing.T) {
 		},
 	}
 
-	manager := NewManagerWithConfig(cfg)
+	// Use mock applier to avoid calling actual netplan command
+	mockApplier := &MockNetplanApplier{}
+	manager := NewManagerWithMock(cfg, mockApplier)
 
 	// First add an IP
 	err := manager.AddIPAddress("192.168.1.100", 80)
@@ -410,7 +406,9 @@ func TestTransactionCommit(t *testing.T) {
 		},
 	}
 
-	manager := NewManagerWithConfig(cfg)
+	// Use mock applier to avoid calling actual netplan command
+	mockApplier := &MockNetplanApplier{}
+	manager := NewManagerWithMock(cfg, mockApplier)
 	transactionID := "test-commit-tx-456"
 
 	// Add changes to transaction
@@ -454,5 +452,34 @@ func TestTransactionCommit(t *testing.T) {
 	if _, err := os.Stat(committedFile); os.IsNotExist(err) {
 		t.Error("Transaction was not moved to committed directory")
 	}
+
+	// Verify netplan apply was called
+	if mockApplier.ApplyCallCount != 1 {
+		t.Errorf("Expected netplan apply to be called once, got %d calls", mockApplier.ApplyCallCount)
+	}
 }
 
+func TestMockNetplanApplier(t *testing.T) {
+	setupTest()
+
+	// Test mock applier success
+	mockApplier := &MockNetplanApplier{}
+	err := mockApplier.Apply()
+	if err != nil {
+		t.Errorf("Mock applier should not error by default: %v", err)
+	}
+	if mockApplier.ApplyCallCount != 1 {
+		t.Errorf("Expected 1 call to Apply(), got %d", mockApplier.ApplyCallCount)
+	}
+
+	// Test mock applier with error
+	expectedError := fmt.Errorf("mock netplan error")
+	mockApplier = &MockNetplanApplier{ApplyError: expectedError}
+	err = mockApplier.Apply()
+	if err != expectedError {
+		t.Errorf("Expected mock error %v, got %v", expectedError, err)
+	}
+	if mockApplier.ApplyCallCount != 1 {
+		t.Errorf("Expected 1 call to Apply(), got %d", mockApplier.ApplyCallCount)
+	}
+}
