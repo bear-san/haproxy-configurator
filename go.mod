@@ -3,7 +3,7 @@ module github.com/bear-san/haproxy-configurator
 go 1.24.3
 
 require (
-	github.com/bear-san/haproxy-go v0.1.4
+	github.com/bear-san/haproxy-go v0.1.5
 	github.com/spf13/cobra v1.9.1
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.73.0
