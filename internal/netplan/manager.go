@@ -20,7 +20,7 @@ import (
 
 // TransactionChange represents a change to be applied in a transaction
 type TransactionChange struct {
-	Operation  string `json:"operation"`   // "add" or "remove"
+	Operation  string `json:"operation"` // "add" or "remove"
 	IPAddress  string `json:"ip_address"`
 	Interface  string `json:"interface"`
 	Port       int    `json:"port,omitempty"`
@@ -39,7 +39,7 @@ type Transaction struct {
 type Manager struct {
 	config         *config.Config
 	addresses      map[string]string // IP -> Interface mapping for tracking
-	transactionDir string           // Directory for transaction files
+	transactionDir string            // Directory for transaction files
 	mutex          sync.RWMutex      // Protects addresses map
 }
 
@@ -57,21 +57,21 @@ type NetplanNetwork struct {
 
 // NetplanInterface represents a network interface configuration
 type NetplanInterface struct {
-	Addresses    []string               `yaml:"addresses,omitempty"`
-	DHCP4        bool                   `yaml:"dhcp4,omitempty"`
-	DHCP6        bool                   `yaml:"dhcp6,omitempty"`
-	Gateway4     string                 `yaml:"gateway4,omitempty"`
-	Gateway6     string                 `yaml:"gateway6,omitempty"`
-	MTU          int                    `yaml:"mtu,omitempty"`
-	MACAddress   string                 `yaml:"macaddress,omitempty"`
-	Critical     bool                   `yaml:"critical,omitempty"`
-	Optional     bool                   `yaml:"optional,omitempty"`
-	Routes       []NetplanRoute         `yaml:"routes,omitempty"`
-	Nameservers  *NetplanNameservers    `yaml:"nameservers,omitempty"`
-	Renderer     string                 `yaml:"renderer,omitempty"`
-	Match        *NetplanMatch          `yaml:"match,omitempty"`
-	SetName      string                 `yaml:"set-name,omitempty"`
-	Additional   map[string]interface{} `yaml:",inline"` // Preserve unknown fields
+	Addresses   []string               `yaml:"addresses,omitempty"`
+	DHCP4       bool                   `yaml:"dhcp4,omitempty"`
+	DHCP6       bool                   `yaml:"dhcp6,omitempty"`
+	Gateway4    string                 `yaml:"gateway4,omitempty"`
+	Gateway6    string                 `yaml:"gateway6,omitempty"`
+	MTU         int                    `yaml:"mtu,omitempty"`
+	MACAddress  string                 `yaml:"macaddress,omitempty"`
+	Critical    bool                   `yaml:"critical,omitempty"`
+	Optional    bool                   `yaml:"optional,omitempty"`
+	Routes      []NetplanRoute         `yaml:"routes,omitempty"`
+	Nameservers *NetplanNameservers    `yaml:"nameservers,omitempty"`
+	Renderer    string                 `yaml:"renderer,omitempty"`
+	Match       *NetplanMatch          `yaml:"match,omitempty"`
+	SetName     string                 `yaml:"set-name,omitempty"`
+	Additional  map[string]interface{} `yaml:",inline"` // Preserve unknown fields
 }
 
 // NetplanVLAN represents a VLAN interface configuration
@@ -100,14 +100,14 @@ type NetplanNameservers struct {
 
 // NetplanRoute represents a route configuration
 type NetplanRoute struct {
-	To       string `yaml:"to"`
-	Via      string `yaml:"via,omitempty"`
-	From     string `yaml:"from,omitempty"`
-	Metric   int    `yaml:"metric,omitempty"`
-	OnLink   bool   `yaml:"on-link,omitempty"`
-	Type     string `yaml:"type,omitempty"`
-	Scope    string `yaml:"scope,omitempty"`
-	Table    int    `yaml:"table,omitempty"`
+	To     string `yaml:"to"`
+	Via    string `yaml:"via,omitempty"`
+	From   string `yaml:"from,omitempty"`
+	Metric int    `yaml:"metric,omitempty"`
+	OnLink bool   `yaml:"on-link,omitempty"`
+	Type   string `yaml:"type,omitempty"`
+	Scope  string `yaml:"scope,omitempty"`
+	Table  int    `yaml:"table,omitempty"`
 }
 
 // NetplanMatch represents match conditions for interface selection
@@ -124,12 +124,12 @@ func NewManagerWithConfig(cfg *config.Config) *Manager {
 	if transactionDir == "" {
 		transactionDir = "/tmp/haproxy-netplan-transactions"
 	}
-	
+
 	logger.GetLogger().Info("Initializing Netplan manager",
 		zap.String("transaction_dir", transactionDir),
 		zap.String("netplan_config_path", cfg.Netplan.ConfigPath),
 		zap.Bool("backup_enabled", cfg.Netplan.BackupEnabled))
-	
+
 	// Ensure transaction directory exists
 	_ = os.MkdirAll(transactionDir, 0755)
 	_ = os.MkdirAll(filepath.Join(transactionDir, "committed"), 0755)
@@ -197,7 +197,7 @@ func (m *Manager) AddIPAddress(ipAddr string, _ int) error {
 		}
 
 		vlan := netplanConfig.Network.Vlans[vlanName]
-		
+
 		// Check if IP already exists
 		for _, addr := range vlan.Addresses {
 			if strings.HasPrefix(addr, ipAddr) {
@@ -209,12 +209,12 @@ func (m *Manager) AddIPAddress(ipAddr string, _ int) error {
 
 		// Add the new IP address
 		vlan.Addresses = append(vlan.Addresses, fullAddr)
-		
+
 		// Ensure link is set to the correct NIC
 		if vlan.Link == "" {
 			vlan.Link = nicName
 		}
-		
+
 		netplanConfig.Network.Vlans[vlanName] = vlan
 	} else {
 		// Handle regular Ethernet interface
@@ -338,16 +338,10 @@ func (m *Manager) RemoveIPAddress(ipAddr string) error {
 	return nil
 }
 
-// ApplyNetplan generates and applies the Netplan configuration to the system.
-// It first runs 'netplan generate' to validate the configuration, then 'netplan apply' to activate it.
-// Returns an error if either command fails.
+// ApplyNetplan applies the Netplan configuration to the system.
+// It runs 'netplan apply' which generates and activates the configuration.
+// Returns an error if the command fails.
 func (m *Manager) ApplyNetplan() error {
-	// Generate the configuration first
-	if err := m.generateNetplan(); err != nil {
-		return fmt.Errorf("failed to generate Netplan config: %w", err)
-	}
-
-	// Then apply it
 	cmd := exec.Command("netplan", "apply")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -356,17 +350,7 @@ func (m *Manager) ApplyNetplan() error {
 	return nil
 }
 
-// generateNetplan generates the Netplan configuration without applying it
-func (m *Manager) generateNetplan() error {
-	cmd := exec.Command("netplan", "generate")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("failed to generate Netplan configuration: %w, output: %s", err, string(output))
-	}
-	return nil
-}
-
-// loadNetplanConfig loads the current Netplan configuration
+// loadNetplanConfig loads the current Netplan configuration directly from the specified yaml file
 func (m *Manager) loadNetplanConfig() (*NetplanConfiguration, error) {
 	configPath := m.config.Netplan.ConfigPath
 
@@ -561,7 +545,8 @@ func (m *Manager) RemoveIPAddressFromTransaction(transactionID, ipAddr string) e
 }
 
 // CommitTransaction applies all pending changes in a transaction to the Netplan configuration.
-// It loads the transaction, applies all changes, saves the configuration, and updates tracking.
+// It loads the transaction, applies all changes to the actual netplan yaml file, updates tracking,
+// and runs netplan apply to activate changes.
 // Returns an error if the transaction cannot be loaded, applied, or if any changes fail.
 func (m *Manager) CommitTransaction(transactionID string) error {
 	m.mutex.Lock()
@@ -580,13 +565,13 @@ func (m *Manager) CommitTransaction(transactionID string) error {
 		return fmt.Errorf("transaction %s is not in pending status: %s", transactionID, transaction.Status)
 	}
 
-	// Load current Netplan configuration
+	// Load current Netplan configuration from actual netplan yaml file
 	netplanConfig, err := m.loadNetplanConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load Netplan config: %w", err)
 	}
 
-	// Apply all changes in the transaction
+	// Apply all changes in the transaction to the netplan configuration
 	for _, change := range transaction.Changes {
 		if err := m.applyChange(netplanConfig, change); err != nil {
 			// Mark transaction as failed
@@ -599,10 +584,16 @@ func (m *Manager) CommitTransaction(transactionID string) error {
 		}
 	}
 
-	// Save the Netplan configuration
+	// Save the updated configuration to the actual netplan yaml file
 	if err := m.saveNetplanConfig(netplanConfig); err != nil {
 		m.markTransactionFailed(transactionID, err)
 		return fmt.Errorf("failed to save Netplan config: %w", err)
+	}
+
+	// Apply the netplan configuration to the system
+	if err := m.ApplyNetplan(); err != nil {
+		m.markTransactionFailed(transactionID, err)
+		return fmt.Errorf("failed to apply Netplan configuration: %w", err)
 	}
 
 	// Update tracking state
@@ -626,7 +617,7 @@ func (m *Manager) CommitTransaction(transactionID string) error {
 		return fmt.Errorf("failed to move transaction to committed: %w", err)
 	}
 
-	logger.GetLogger().Info("Successfully committed Netplan transaction",
+	logger.GetLogger().Info("Successfully committed Netplan transaction and applied to system",
 		zap.String("transaction_id", transactionID),
 		zap.Int("changes_applied", len(transaction.Changes)))
 
@@ -667,7 +658,7 @@ func (m *Manager) addChangeToTransaction(transactionID string, change Transactio
 // loadTransaction loads a transaction from file
 func (m *Manager) loadTransaction(transactionID string) (*Transaction, error) {
 	filePath := filepath.Join(m.transactionDir, fmt.Sprintf("transaction-%s.json", transactionID))
-	
+
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
@@ -684,7 +675,7 @@ func (m *Manager) loadTransaction(transactionID string) (*Transaction, error) {
 // saveTransaction saves a transaction to file
 func (m *Manager) saveTransaction(transaction *Transaction) error {
 	filePath := filepath.Join(m.transactionDir, fmt.Sprintf("transaction-%s.json", transaction.TransactionID))
-	
+
 	data, err := json.MarshalIndent(transaction, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal transaction: %w", err)
@@ -713,7 +704,7 @@ func (m *Manager) applyChange(netplanConfig *NetplanConfiguration, change Transa
 		switch change.Operation {
 		case "add":
 			fullAddr := fmt.Sprintf("%s%s", change.IPAddress, change.SubnetMask)
-			
+
 			// Check if IP already exists
 			for _, addr := range vlan.Addresses {
 				if strings.HasPrefix(addr, change.IPAddress) {
@@ -721,15 +712,15 @@ func (m *Manager) applyChange(netplanConfig *NetplanConfiguration, change Transa
 					return nil
 				}
 			}
-			
+
 			// Add the new IP address
 			vlan.Addresses = append(vlan.Addresses, fullAddr)
-			
+
 			// Ensure link is set to the correct NIC
 			if vlan.Link == "" {
 				vlan.Link = nicName
 			}
-			
+
 			netplanConfig.Network.Vlans[vlanName] = vlan
 
 		case "remove":
@@ -740,10 +731,10 @@ func (m *Manager) applyChange(netplanConfig *NetplanConfiguration, change Transa
 					newAddresses = append(newAddresses, addr)
 				}
 			}
-			
+
 			vlan.Addresses = newAddresses
 			netplanConfig.Network.Vlans[vlanName] = vlan
-			
+
 			// If no addresses left, remove the VLAN from config
 			if len(vlan.Addresses) == 0 {
 				delete(netplanConfig.Network.Vlans, vlanName)
@@ -763,7 +754,7 @@ func (m *Manager) applyChange(netplanConfig *NetplanConfiguration, change Transa
 		switch change.Operation {
 		case "add":
 			fullAddr := fmt.Sprintf("%s%s", change.IPAddress, change.SubnetMask)
-			
+
 			// Check if IP already exists
 			for _, addr := range iface.Addresses {
 				if strings.HasPrefix(addr, change.IPAddress) {
@@ -771,7 +762,7 @@ func (m *Manager) applyChange(netplanConfig *NetplanConfiguration, change Transa
 					return nil
 				}
 			}
-			
+
 			// Add the new IP address
 			iface.Addresses = append(iface.Addresses, fullAddr)
 			netplanConfig.Network.Ethernets[change.Interface] = iface
@@ -784,10 +775,10 @@ func (m *Manager) applyChange(netplanConfig *NetplanConfiguration, change Transa
 					newAddresses = append(newAddresses, addr)
 				}
 			}
-			
+
 			iface.Addresses = newAddresses
 			netplanConfig.Network.Ethernets[change.Interface] = iface
-			
+
 			// If no addresses left, remove the interface from config
 			if len(iface.Addresses) == 0 {
 				delete(netplanConfig.Network.Ethernets, change.Interface)
@@ -802,12 +793,12 @@ func (m *Manager) applyChange(netplanConfig *NetplanConfiguration, change Transa
 }
 
 // markTransactionFailed marks a transaction as failed
-func (m *Manager) markTransactionFailed(transactionID string, err error) {
+func (m *Manager) markTransactionFailed(transactionID string, _ error) {
 	transaction, loadErr := m.loadTransaction(transactionID)
 	if loadErr != nil {
 		return
 	}
-	
+
 	transaction.Status = "failed"
 	// Could add error details to transaction if needed
 	_ = m.saveTransaction(transaction)
@@ -817,7 +808,7 @@ func (m *Manager) markTransactionFailed(transactionID string, err error) {
 func (m *Manager) moveTransactionToCommitted(transactionID string) error {
 	srcPath := filepath.Join(m.transactionDir, fmt.Sprintf("transaction-%s.json", transactionID))
 	dstPath := filepath.Join(m.transactionDir, "committed", fmt.Sprintf("transaction-%s.json", transactionID))
-	
+
 	return os.Rename(srcPath, dstPath)
 }
 
